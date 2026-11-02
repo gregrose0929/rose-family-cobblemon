@@ -80,6 +80,26 @@
   "page": "https://modrinth.com/mod/fabric-api"
  },
  {
+  "name": "Cobblemon Fight or Flight Reborn",
+  "version": "0.11.1",
+  "file": "fightorflight-fabric-0.11.1.jar",
+  "url": "https://cdn.modrinth.com/data/cTdIg5HZ/versions/ot7BirRv/fightorflight-fabric-0.11.1.jar",
+  "sha512": "C8C315A3125C90F52B81C642CCE483697CEA39E09BE48C9E1A2FE75E006ED743DAB0D887D169A4D6743A99240EAA88273703C60C4B7A06D3BF8BAA3C9FEDE839",
+  "mb": 1.5,
+  "license": "MIT",
+  "page": "https://modrinth.com/mod/cobblemon-fight-or-flight-reborn"
+ },
+ {
+  "name": "Follow me [Cobblemon]",
+  "version": "2.2.1",
+  "file": "followme-2.2.1.jar",
+  "url": "https://cdn.modrinth.com/data/AKkRTKQc/versions/bD4BNSL3/followme-2.2.1.jar",
+  "sha512": "EB92413D32134A1B3A918228AC9AEE95F201655F5F067F50833AD5CC13C5048224C7950B1D7F60D39905C9FDE799772FE5773537CBD6675A7393BA2852A0C5FE",
+  "mb": 0.5,
+  "license": "MIT",
+  "page": "https://modrinth.com/mod/follow-me-cobblemon"
+ },
+ {
   "name": "Forge Config API Port",
   "version": "v21.1.6-1.21.1-Fabric",
   "file": "ForgeConfigAPIPort-v21.1.6-1.21.1-Fabric.jar",

@@ -18,7 +18,7 @@ UA = {"User-Agent": "rose-family-cobblemon-installer"}
 CLIENT_MODS = (
     "Cobblemon-fabric", "fabric-api", "Cobblemon-MegaShowdown", "mega", "owo-lib", "owo", "architectury",
     "accessories", "rctmod", "rctapi", "ForgeConfigAPIPort", "CobbleFurnies", "athena",
-    "cobblemonraiddens", "geckolib", "cobblemon_battle_tower", "wild",
+    "cobblemonraiddens", "geckolib", "cobblemon_battle_tower", "wild", "fightorflight", "followme",
 )
 SERVER_ONLY = ("flan", "essential", "luckperms", "lithium", "ferritecore", "servercore", "spark", "daycareplus", "polymer", "pokedex", "Radical Gyms")
 
