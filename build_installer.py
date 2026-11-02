@@ -1,17 +1,17 @@
-"""Build Install-Cobblemon.bat from installer-template.ps1. Usage: build_installer.py MOD_FOLDER
+"""Build dist/Rose-Family-Cobblemon-Setup.exe from Setup.cs. Usage: build_installer.py MOD_FOLDER VERSION
 
 Looks up each client mod on Modrinth by its sha512, so the installer downloads the
 exact file that was tested and verifies it against that hash.
 """
-import base64
 import hashlib
 import json
 import os
 import struct
+import subprocess
 import sys
 import urllib.request as u
 
-MOD_FOLDER = sys.argv[1]
+MOD_FOLDER, VERSION = sys.argv[1:3]
 HERE = os.path.dirname(os.path.abspath(__file__))
 UA = {"User-Agent": "rose-family-cobblemon-installer"}
 # Mods each player needs. Server-only mods stay off players' computers.
@@ -54,27 +54,29 @@ for filename in sorted(os.listdir(MOD_FOLDER), key=str.lower):
         "license": (project.get("license") or {}).get("id", "unknown"), "page": f"https://modrinth.com/mod/{project['slug']}",
     })
 
-template = open(os.path.join(HERE, "installer-template.ps1"), encoding="utf-8").read()
-ps = template.replace("@@MODS_JSON@@", json.dumps(mods, indent=1)).replace(
-    "@@SERVERS_DAT@@", base64.b64encode(servers_dat("Rose Family Server", "mc.greg.download")).decode())
-if not ps.isascii():
-    raise SystemExit("Installer must be plain ASCII")
-launcher = (
-    "@echo off\r\n"
-    "title Rose Family Server - Cobblemon installer\r\n"
-    "powershell -NoProfile -ExecutionPolicy Bypass -Command \"$s=[IO.File]::ReadAllText('%~f0'); "
-    "Invoke-Expression $s.Substring($s.LastIndexOf('#PS-START#')+10)\"\r\n"
-    "echo.\r\n"
-    "pause\r\n"
-    "exit /b\r\n"
-    "#PS-START#\r\n"
-)
-with open(os.path.join(HERE, "Install-Cobblemon.bat"), "w", encoding="ascii", newline="") as handle:
-    handle.write(launcher + ps.replace("\r\n", "\n").replace("\n", "\r\n"))
 with open(os.path.join(HERE, "mods.json"), "w", encoding="utf-8") as handle:
     json.dump(mods, handle, indent=1)
+
+dist = os.path.join(HERE, "dist")
+os.makedirs(dist, exist_ok=True)
+with open(os.path.join(dist, "servers.dat"), "wb") as handle:
+    handle.write(servers_dat("Rose Family Server", "mc.greg.download"))
+with open(os.path.join(dist, "Version.cs"), "w", encoding="ascii") as handle:
+    handle.write(f'[assembly: System.Reflection.AssemblyVersion("{VERSION}.0")]\n[assembly: System.Reflection.AssemblyFileVersion("{VERSION}.0")]\n')
+output = os.path.join(dist, "Rose-Family-Cobblemon-Setup.exe")
+subprocess.run([
+    os.path.join(os.environ["WINDIR"], "Microsoft.NET", "Framework64", "v4.0.30319", "csc.exe"),
+    "/nologo", "/target:winexe", "/optimize+", f"/out:{output}",
+    "/r:System.Windows.Forms.dll", "/r:System.Drawing.dll", "/r:System.Web.Extensions.dll", "/r:System.Management.dll", "/r:Microsoft.VisualBasic.dll",
+    f"/win32icon:{os.path.join(HERE, 'icon.ico')}", f"/win32manifest:{os.path.join(HERE, 'Setup.manifest')}",
+    f"/resource:{os.path.join(HERE, 'icon.ico')},icon.ico",
+    f"/resource:{os.path.join(HERE, 'mods.json')},mods.json",
+    f"/resource:{os.path.join(dist, 'servers.dat')},servers.dat",
+    os.path.join(HERE, "Setup.cs"), os.path.join(dist, "Version.cs"),
+], check=True)
 
 for mod in mods:
     print(f"{mod['name']:32} {mod['version']:32} {mod['mb']:6} MB  {mod['license']}")
 print(f"{len(mods)} client mods, {round(sum(m['mb'] for m in mods), 1)} MB total")
 print("left off players' computers:", skipped)
+print("built", output, hashlib.sha256(open(output, "rb").read()).hexdigest())
