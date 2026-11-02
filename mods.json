@@ -30,6 +30,16 @@
   "page": "https://modrinth.com/mod/athena-ctm"
  },
  {
+  "name": "CobbleDollars [Cobblemon Addon]",
+  "version": "2.0.0+Beta-6.1",
+  "file": "CobbleDollars-fabric-2.0.0+Beta-6.1+1.21.1.jar",
+  "url": "https://cdn.modrinth.com/data/s7N7AsqL/versions/NQdxKsW7/CobbleDollars-fabric-2.0.0%2BBeta-6.1%2B1.21.1.jar",
+  "sha512": "082078D40948BCFD73B7EEAF334D21BEE05A6D839C0981D5DD12F592BCD45D1D7BC6B69F74EE28B6AA4C9840F7C189C692695336F6434C03400FCABEEB67E0FC",
+  "mb": 0.5,
+  "license": "LicenseRef-All-Rights-Reserved",
+  "page": "https://modrinth.com/mod/cobbledollars"
+ },
+ {
   "name": "CobbleFurnies",
   "version": "1.2",
   "file": "CobbleFurnies-fabric-1.2.jar",
@@ -168,5 +178,25 @@
   "mb": 0.3,
   "license": "LicenseRef-All-Rights-Reserved",
   "page": "https://modrinth.com/mod/wild-battle-api"
+ },
+ {
+  "name": "Xaero's Minimap",
+  "version": "fabric-1.21.1-26.6.0",
+  "file": "xaerominimap-fabric-1.21.1-26.6.0.jar",
+  "url": "https://cdn.modrinth.com/data/1bokaNcj/versions/W4dcLcUs/xaerominimap-fabric-1.21.1-26.6.0.jar",
+  "sha512": "BAD6DFBDFA4FA83C10155380E44E7C7A181C86144CBB377548A3DF94E1FDADB88A27DBF18DCA89BF8748A49A1C485A03B458E1F74A7881029763297106ED26B7",
+  "mb": 2.2,
+  "license": "LicenseRef-All-Rights-Reserved",
+  "page": "https://modrinth.com/mod/xaeros-minimap"
+ },
+ {
+  "name": "Xaero's World Map",
+  "version": "fabric-1.21.1-1.47.0",
+  "file": "xaeroworldmap-fabric-1.21.1-1.47.0.jar",
+  "url": "https://cdn.modrinth.com/data/NcUtCpym/versions/XIR7GzC3/xaeroworldmap-fabric-1.21.1-1.47.0.jar",
+  "sha512": "7BDF96A45AB729AD5B8C56B1DE421AB8C94006A65E62F21E45A4733A38A7A1655B8BE03EF3BDFCDC52401C66894B9F4F80FC28B41D47A787A9FA45094629F5C7",
+  "mb": 1.5,
+  "license": "LicenseRef-All-Rights-Reserved",
+  "page": "https://modrinth.com/mod/xaeros-world-map"
  }
 ]

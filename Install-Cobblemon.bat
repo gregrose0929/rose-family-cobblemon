@@ -49,6 +49,16 @@ $Mods = @'
   "page": "https://modrinth.com/mod/athena-ctm"
  },
  {
+  "name": "CobbleDollars [Cobblemon Addon]",
+  "version": "2.0.0+Beta-6.1",
+  "file": "CobbleDollars-fabric-2.0.0+Beta-6.1+1.21.1.jar",
+  "url": "https://cdn.modrinth.com/data/s7N7AsqL/versions/NQdxKsW7/CobbleDollars-fabric-2.0.0%2BBeta-6.1%2B1.21.1.jar",
+  "sha512": "082078D40948BCFD73B7EEAF334D21BEE05A6D839C0981D5DD12F592BCD45D1D7BC6B69F74EE28B6AA4C9840F7C189C692695336F6434C03400FCABEEB67E0FC",
+  "mb": 0.5,
+  "license": "LicenseRef-All-Rights-Reserved",
+  "page": "https://modrinth.com/mod/cobbledollars"
+ },
+ {
   "name": "CobbleFurnies",
   "version": "1.2",
   "file": "CobbleFurnies-fabric-1.2.jar",
@@ -187,6 +197,26 @@ $Mods = @'
   "mb": 0.3,
   "license": "LicenseRef-All-Rights-Reserved",
   "page": "https://modrinth.com/mod/wild-battle-api"
+ },
+ {
+  "name": "Xaero's Minimap",
+  "version": "fabric-1.21.1-26.6.0",
+  "file": "xaerominimap-fabric-1.21.1-26.6.0.jar",
+  "url": "https://cdn.modrinth.com/data/1bokaNcj/versions/W4dcLcUs/xaerominimap-fabric-1.21.1-26.6.0.jar",
+  "sha512": "BAD6DFBDFA4FA83C10155380E44E7C7A181C86144CBB377548A3DF94E1FDADB88A27DBF18DCA89BF8748A49A1C485A03B458E1F74A7881029763297106ED26B7",
+  "mb": 2.2,
+  "license": "LicenseRef-All-Rights-Reserved",
+  "page": "https://modrinth.com/mod/xaeros-minimap"
+ },
+ {
+  "name": "Xaero's World Map",
+  "version": "fabric-1.21.1-1.47.0",
+  "file": "xaeroworldmap-fabric-1.21.1-1.47.0.jar",
+  "url": "https://cdn.modrinth.com/data/NcUtCpym/versions/XIR7GzC3/xaeroworldmap-fabric-1.21.1-1.47.0.jar",
+  "sha512": "7BDF96A45AB729AD5B8C56B1DE421AB8C94006A65E62F21E45A4733A38A7A1655B8BE03EF3BDFCDC52401C66894B9F4F80FC28B41D47A787A9FA45094629F5C7",
+  "mb": 1.5,
+  "license": "LicenseRef-All-Rights-Reserved",
+  "page": "https://modrinth.com/mod/xaeros-world-map"
  }
 ]
 '@ | ConvertFrom-Json
@@ -278,6 +308,44 @@ function Add-ServerToList {
     [IO.File]::WriteAllBytes($file, [Convert]::FromBase64String($ServersDatBase64))
 }
 
+function Add-MapWaypoints {
+    # name, initials, x, z, color, dimension folder
+    $places = @(
+        @('Cerulean City', 'C', 624, 128, 9, 'dim%0'),
+        @('Vermilion City', 'V', 592, -464, 9, 'dim%0'),
+        @('Viridian City', 'V', -752, -816, 9, 'dim%0'),
+        @('Saffron City', 'S', -336, -1296, 9, 'dim%0'),
+        @('Cinnabar Island', 'C', 640, 1520, 9, 'dim%0'),
+        @('Fuchsia City', 'F', 96, -1888, 9, 'dim%0'),
+        @('Pewter City', 'P', 1968, -2768, 9, 'dim%0'),
+        @('Celadon City', 'C', -2272, -3200, 9, 'dim%0'),
+        @('Cerulean Gym', 'G', 752, 208, 14, 'dim%0'),
+        @('Vermilion Gym', 'G', 160, -464, 14, 'dim%0'),
+        @('Celadon Gym', 'G', -880, 80, 14, 'dim%0'),
+        @('Fuchsia Gym', 'G', -816, 848, 14, 'dim%0'),
+        @('Saffron Gym', 'G', -1392, -320, 14, 'dim%0'),
+        @('Pewter Gym', 'G', 1344, -2208, 14, 'dim%0'),
+        @('Cinnabar Gym', 'G', -272, -160, 14, 'dim%-1'),
+        @('Blackthorn Gym', 'G', 1200, -480, 14, 'dim%1'),
+        @('Kanto League', 'L', -416, 1904, 12, 'dim%1')
+    )
+    $root = Join-Path (Join-Path $GameDir 'XaeroWaypoints') "Multiplayer_$ServerAddress"
+    foreach ($group in ($places | Group-Object { $_[5] })) {
+        $folder = Join-Path $root $group.Name
+        New-Item -ItemType Directory -Force -Path $folder | Out-Null
+        $file = Join-Path $folder 'mw$default_1.txt'
+        $text = if (Test-Path -LiteralPath $file) { [IO.File]::ReadAllText($file) } else {
+            "#`n#waypoint:name:initials:x:y:z:color:disabled:type:set:rotate_on_tp:tp_yaw:visibility_type:destination`n#`nsets:gui.xaero_default`n#`n"
+        }
+        foreach ($p in $group.Group) {
+            if (-not $text.Contains("waypoint:$($p[0]):")) {
+                $text += "waypoint:$($p[0]):$($p[1]):$($p[2]):~:$($p[3]):$($p[4]):false:0:gui.xaero_default:false:0:0:false`n"
+            }
+        }
+        [IO.File]::WriteAllText($file, $text, $Utf8NoBom)
+    }
+}
+
 function Test-MinecraftRunning {
     if (Get-Process -Name 'Minecraft', 'MinecraftLauncher' -ErrorAction SilentlyContinue) { return $true }
     $java = Get-CimInstance Win32_Process -Filter "Name='javaw.exe' OR Name='java.exe'" -ErrorAction SilentlyContinue
@@ -313,6 +381,7 @@ try {
     Say 'Step 3 of 3: Adding the launcher profile and server...'
     Set-LauncherProfile
     Add-ServerToList
+    Add-MapWaypoints
     Say ''
     Say '================================================'
     Say '  All done!'
@@ -321,6 +390,7 @@ try {
     Say "1. Open the Minecraft Launcher."
     Say "2. Choose the '$ProfileName' profile and press Play."
     Say "3. Go to Multiplayer and join 'Rose Family Server'."
+    Say "4. Press M in the game to open the map. Towns and gyms are marked on it."
     Say ''
     Say 'Your other Minecraft worlds and mods were not changed.'
 } catch {

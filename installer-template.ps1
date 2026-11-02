@@ -100,6 +100,44 @@ function Add-ServerToList {
     [IO.File]::WriteAllBytes($file, [Convert]::FromBase64String($ServersDatBase64))
 }
 
+function Add-MapWaypoints {
+    # name, initials, x, z, color, dimension folder
+    $places = @(
+        @('Cerulean City', 'C', 624, 128, 9, 'dim%0'),
+        @('Vermilion City', 'V', 592, -464, 9, 'dim%0'),
+        @('Viridian City', 'V', -752, -816, 9, 'dim%0'),
+        @('Saffron City', 'S', -336, -1296, 9, 'dim%0'),
+        @('Cinnabar Island', 'C', 640, 1520, 9, 'dim%0'),
+        @('Fuchsia City', 'F', 96, -1888, 9, 'dim%0'),
+        @('Pewter City', 'P', 1968, -2768, 9, 'dim%0'),
+        @('Celadon City', 'C', -2272, -3200, 9, 'dim%0'),
+        @('Cerulean Gym', 'G', 752, 208, 14, 'dim%0'),
+        @('Vermilion Gym', 'G', 160, -464, 14, 'dim%0'),
+        @('Celadon Gym', 'G', -880, 80, 14, 'dim%0'),
+        @('Fuchsia Gym', 'G', -816, 848, 14, 'dim%0'),
+        @('Saffron Gym', 'G', -1392, -320, 14, 'dim%0'),
+        @('Pewter Gym', 'G', 1344, -2208, 14, 'dim%0'),
+        @('Cinnabar Gym', 'G', -272, -160, 14, 'dim%-1'),
+        @('Blackthorn Gym', 'G', 1200, -480, 14, 'dim%1'),
+        @('Kanto League', 'L', -416, 1904, 12, 'dim%1')
+    )
+    $root = Join-Path (Join-Path $GameDir 'XaeroWaypoints') "Multiplayer_$ServerAddress"
+    foreach ($group in ($places | Group-Object { $_[5] })) {
+        $folder = Join-Path $root $group.Name
+        New-Item -ItemType Directory -Force -Path $folder | Out-Null
+        $file = Join-Path $folder 'mw$default_1.txt'
+        $text = if (Test-Path -LiteralPath $file) { [IO.File]::ReadAllText($file) } else {
+            "#`n#waypoint:name:initials:x:y:z:color:disabled:type:set:rotate_on_tp:tp_yaw:visibility_type:destination`n#`nsets:gui.xaero_default`n#`n"
+        }
+        foreach ($p in $group.Group) {
+            if (-not $text.Contains("waypoint:$($p[0]):")) {
+                $text += "waypoint:$($p[0]):$($p[1]):$($p[2]):~:$($p[3]):$($p[4]):false:0:gui.xaero_default:false:0:0:false`n"
+            }
+        }
+        [IO.File]::WriteAllText($file, $text, $Utf8NoBom)
+    }
+}
+
 function Test-MinecraftRunning {
     if (Get-Process -Name 'Minecraft', 'MinecraftLauncher' -ErrorAction SilentlyContinue) { return $true }
     $java = Get-CimInstance Win32_Process -Filter "Name='javaw.exe' OR Name='java.exe'" -ErrorAction SilentlyContinue
@@ -135,6 +173,7 @@ try {
     Say 'Step 3 of 3: Adding the launcher profile and server...'
     Set-LauncherProfile
     Add-ServerToList
+    Add-MapWaypoints
     Say ''
     Say '================================================'
     Say '  All done!'
@@ -143,6 +182,7 @@ try {
     Say "1. Open the Minecraft Launcher."
     Say "2. Choose the '$ProfileName' profile and press Play."
     Say "3. Go to Multiplayer and join 'Rose Family Server'."
+    Say "4. Press M in the game to open the map. Towns and gyms are marked on it."
     Say ''
     Say 'Your other Minecraft worlds and mods were not changed.'
 } catch {

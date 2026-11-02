@@ -15,6 +15,8 @@ This sets up your game to play Cobblemon on the Rose Family Server. It takes abo
 
 The first launch takes a few minutes, because there's a lot to load.
 
+**Press `M` in the game to open the map.** Pokémon towns and gyms are already marked on it. The land itself fills in as people explore.
+
 ## Good to know
 
 - **Your other worlds and mods are safe.** Cobblemon gets its own game folder, `%APPDATA%\.minecraft-cobblemon`.
