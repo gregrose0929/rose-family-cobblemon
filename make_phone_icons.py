@@ -1,6 +1,7 @@
 """Draw the phone's extra app icons and package them as a small resource-only mod. Usage: make_phone_icons.py OUTPUT.jar"""
 import json
 import math
+import os
 import struct
 import sys
 import zipfile
@@ -152,10 +153,14 @@ def spawns(put, rect):
 
 
 ICONS = {"today": ((60, 130, 190, 255), today), "cup": ((150, 40, 60, 255), cup), "go_home": ((70, 120, 140, 255), go_home), "set_home": ((60, 110, 60, 255), set_home), "go_back": ((110, 110, 120, 255), go_back), "spawns": ((130, 90, 50, 255), spawns), "town": ((190, 60, 90, 255), town), "hunts": ((205, 110, 30, 255), hunts), "balls": ((60, 90, 170, 255), balls), "dex": ((50, 130, 80, 255), dex), "guide": ((120, 70, 170, 255), guide)}
-MOD = {"schemaVersion": 1, "id": "rose_family_icons", "version": "1.0.0", "name": "Rose Family Icons", "description": "Icons for the Rose Family Server's phone apps.", "environment": "client", "depends": {"minecraft": "~1.21.1"}, "license": "MIT"}
+MOD = {"schemaVersion": 1, "id": "rose_family_icons", "version": "1.1.0", "name": "Rose Family Icons", "description": "Icons for the Rose Family Server's phone apps, plus wording for server-only mods.", "environment": "client", "depends": {"minecraft": "~1.21.1"}, "license": "MIT"}
 with zipfile.ZipFile(sys.argv[1], "w", zipfile.ZIP_DEFLATED) as jar:
     jar.writestr("fabric.mod.json", json.dumps(MOD))
     for name, (background, draw) in ICONS.items():
         jar.writestr(f"assets/rose_family/textures/gui/buttons/{name}.png", icon(background, draw, False))
         jar.writestr(f"assets/rose_family/textures/gui/buttons/{name}_hover.png", icon(background, draw, True))
+    # Server-only mods send text by key, so the wording has to be on each player's PC.
+    with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "server-mod-wording.json"), encoding="utf-8") as handle:
+        for path, wording in json.load(handle).items():
+            jar.writestr(path, json.dumps(wording, ensure_ascii=False))
 print("wrote", sys.argv[1])

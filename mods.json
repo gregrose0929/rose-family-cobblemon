@@ -50,6 +50,16 @@
   "page": "https://modrinth.com/mod/cobblefurnies"
  },
  {
+  "name": "Cobblemon Armors",
+  "version": "1.6.0+1.8.4",
+  "file": "cobblemon-armors-1.6.0+1.8.4.jar",
+  "url": "https://cdn.modrinth.com/data/WwDbGW1s/versions/3l0odtYe/cobblemon-armors-1.6.0%2B1.8.4.jar",
+  "sha512": "337A308091375AFC529D9707AB1A74AE419A43C8249F59D910FF4475F4A28EBF5CE75C9D762C57A6A0136176282235FF39EFD7C5CB02F81297D66C43264DCC0E",
+  "mb": 17.5,
+  "license": "GPL-3.0-only",
+  "page": "https://modrinth.com/mod/cobblemon-armors"
+ },
+ {
   "name": "Cobblemon",
   "version": "1.8.4F",
   "file": "Cobblemon-fabric-1.8.4+1.21.1.jar",
@@ -98,6 +108,16 @@
   "mb": 0.1,
   "license": "CC-BY-NC-ND-4.0",
   "page": "https://modrinth.com/mod/cobbleverse-badges"
+ },
+ {
+  "name": "Cobbleworkers",
+  "version": "2.0.7+1.8.3",
+  "file": "cobbleworkers-fabric-2.0.7+1.8.3.jar",
+  "url": "https://cdn.modrinth.com/data/i3XVG2gn/versions/QKvjId4J/cobbleworkers-fabric-2.0.7%2B1.8.3.jar",
+  "sha512": "AA3BD8E3ED637BAD50A084DEC3338AB55FC6AF75C9A30F2FACC1BC37C7AD614FC19818CE36E7934B2E3196F2BD9D3534B4230738D65578A4DA541898E70BF21E",
+  "mb": 0.3,
+  "license": "MPL-2.0",
+  "page": "https://modrinth.com/mod/cobbleworkers"
  },
  {
   "name": "Dynamic FPS",
@@ -198,6 +218,16 @@
   "mb": 2.0,
   "license": "MIT",
   "page": "https://modrinth.com/mod/owo-lib"
+ },
+ {
+  "name": "Poke Clothing",
+  "version": "1.21.1-1.2.2",
+  "file": "poke-clothing-1.2.2.jar",
+  "url": "https://cdn.modrinth.com/data/enyi2m8u/versions/bmLnQ5iN/poke-clothing-1.2.2.jar",
+  "sha512": "D407353F95400C38504902F1B9030A5A86C678E126BD8674E1C4A143A9910C319FAB92F62A87539CC6FF3AC4633B680401330006390B3B2D115CDBDC8F2BCA93",
+  "mb": 0.3,
+  "license": "Apache-2.0",
+  "page": "https://modrinth.com/mod/poke-clothing"
  },
  {
   "name": "Radical Cobblemon Trainers API",
