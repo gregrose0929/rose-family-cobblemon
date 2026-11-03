@@ -152,8 +152,23 @@ def spawns(put, rect):
                     put(x, y)
 
 
-ICONS = {"today": ((60, 130, 190, 255), today), "cup": ((150, 40, 60, 255), cup), "go_home": ((70, 120, 140, 255), go_home), "set_home": ((60, 110, 60, 255), set_home), "go_back": ((110, 110, 120, 255), go_back), "spawns": ((130, 90, 50, 255), spawns), "town": ((190, 60, 90, 255), town), "hunts": ((205, 110, 30, 255), hunts), "balls": ((60, 90, 170, 255), balls), "dex": ((50, 130, 80, 255), dex), "guide": ((120, 70, 170, 255), guide)}
-MOD = {"schemaVersion": 1, "id": "rose_family_icons", "version": "1.1.0", "name": "Rose Family Icons", "description": "Icons for the Rose Family Server's phone apps, plus wording for server-only mods.", "environment": "client", "depends": {"minecraft": "~1.21.1"}, "license": "MIT"}
+def travel(put, rect):
+    # A map pin.
+    pin = (235, 70, 70, 255)
+    for y in range(36):
+        for x in range(36):
+            if math.hypot(x - 17.5, y - 14) <= 8:
+                put(x, y, pin)
+    for i in range(10):
+        rect(17 - (7 - i * 7 // 10), 20 + i, 18 + (7 - i * 7 // 10), 20 + i, pin)
+    for y in range(36):
+        for x in range(36):
+            if math.hypot(x - 17.5, y - 14) <= 3:
+                put(x, y)
+
+
+ICONS = {"travel": ((40, 140, 140, 255), travel), "today": ((60, 130, 190, 255), today), "cup": ((150, 40, 60, 255), cup), "go_home": ((70, 120, 140, 255), go_home), "set_home": ((60, 110, 60, 255), set_home), "go_back": ((110, 110, 120, 255), go_back), "spawns": ((130, 90, 50, 255), spawns), "town": ((190, 60, 90, 255), town), "hunts": ((205, 110, 30, 255), hunts), "balls": ((60, 90, 170, 255), balls), "dex": ((50, 130, 80, 255), dex), "guide": ((120, 70, 170, 255), guide)}
+MOD = {"schemaVersion": 1, "id": "rose_family_icons", "version": "1.2.0", "name": "Rose Family Icons", "description": "Icons for the Rose Family Server's phone apps, plus wording for server-only mods.", "environment": "client", "depends": {"minecraft": "~1.21.1"}, "license": "MIT"}
 with zipfile.ZipFile(sys.argv[1], "w", zipfile.ZIP_DEFLATED) as jar:
     jar.writestr("fabric.mod.json", json.dumps(MOD))
     for name, (background, draw) in ICONS.items():
