@@ -402,7 +402,14 @@ public static class Installer
         }
         else
         {
-            Directory.Delete(InstallDir, true);
+            try
+            {
+                Directory.Delete(InstallDir, true);
+            }
+            catch (IOException)
+            {
+                // Antivirus can hold the file briefly. Everything that matters is already gone, and a leftover copy does no harm.
+            }
         }
     }
 }
@@ -548,7 +555,7 @@ public sealed class SetupForm : Form
                 + "1.  Open the Minecraft Launcher.\n"
                 + string.Format("2.  Choose the \"{0}\" profile and press Play.\n", Installer.ProfileName)
                 + string.Format("3.  Go to Multiplayer and join \"{0}\".\n", Installer.ServerName)
-                + "4.  You'll get a red phone: press K to heal, change your team, and more.\n"
+                + "4.  Press K to open your phone. It changes your team, opens the shop, and more.\n"
                 + "5.  Press M for the map, and right-click any town to teleport there.\n\n"
                 + "The first launch takes a few minutes, because there's a lot to load.",
                 MakeButton("Finish", Close));
