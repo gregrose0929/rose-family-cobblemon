@@ -19,7 +19,7 @@ CLIENT_MODS = (
     "Cobblemon-fabric", "fabric-api", "Cobblemon-MegaShowdown", "mega", "owo-lib", "owo", "architectury",
     "accessories", "rctmod", "rctapi", "ForgeConfigAPIPort", "CobbleFurnies", "athena",
     "cobblemonraiddens", "geckolib", "cobblemon_battle_tower", "wild", "fightorflight", "followme",
-    "CobbleDollars", "xaeroworldmap", "xaerominimap", "CobbleverseBadges",
+    "CobbleDollars", "xaeroworldmap", "xaerominimap", "CobbleverseBadges", "cobblemon_smartphone",
 )
 SERVER_ONLY = ("flan", "essential", "luckperms", "lithium", "ferritecore", "servercore", "spark", "daycareplus", "polymer", "pokedex", "Radical Gyms")
 
@@ -64,6 +64,8 @@ with open(os.path.join(dist, "servers.dat"), "wb") as handle:
 with open(os.path.join(dist, "Version.cs"), "w", encoding="ascii") as handle:
     handle.write(f'[assembly: System.Reflection.AssemblyVersion("{VERSION}.0")]\n[assembly: System.Reflection.AssemblyFileVersion("{VERSION}.0")]\n')
 output = os.path.join(dist, "Rose-Family-Cobblemon-Setup.exe")
+icons = os.path.join(dist, "rose-family-icons.jar")
+subprocess.run([sys.executable, os.path.join(HERE, "make_phone_icons.py"), icons], check=True)
 subprocess.run([
     os.path.join(os.environ["WINDIR"], "Microsoft.NET", "Framework64", "v4.0.30319", "csc.exe"),
     "/nologo", "/target:winexe", "/optimize+", f"/out:{output}",
@@ -72,6 +74,7 @@ subprocess.run([
     f"/resource:{os.path.join(HERE, 'icon.ico')},icon.ico",
     f"/resource:{os.path.join(HERE, 'mods.json')},mods.json",
     f"/resource:{os.path.join(dist, 'servers.dat')},servers.dat",
+    f"/resource:{icons},rose-family-icons.jar",
     os.path.join(HERE, "Setup.cs"), os.path.join(dist, "Version.cs"),
 ], check=True)
 

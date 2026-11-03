@@ -20,16 +20,11 @@ The first launch takes a few minutes, because there's a lot to load.
 - **Teleport to Waypoint** takes you there right away.
 - **Enable Waypoint** shows it around you as you travel. Choose **Disable Waypoint** when you're done, so your screen stays clear.
 
-**New here?** You'll start in Rose Town with a Trainer's Guide book, Poké Balls, and potions. Follow the signs along the Trainer's Trail, or type `/trigger guide` any time.
+**New here?** You'll start in Rose Town with a red phone, a Trainer's Guide book, Poké Balls, and potions. Follow the signs along the Trainer's Trail.
 
-| Type this | What it does |
-|---|---|
-| `/trigger guide` | Opens the guide |
-| `/trigger heal` | Heals your Pokémon |
-| `/trigger balls` | Gives you 32 Poké Balls |
-| `/trigger town` | Takes you back to Rose Town |
-| `/trigger dex` | Shows the Family Pokédex |
-| `/hunts` | Opens catching missions |
+**Hold the phone and right-click it** to do almost everything: heal your team, change your team in the PC, open the Pokédex and the shop, look up Pokémon, message family, go back to Rose Town, start hunts, get more Poké Balls, and open the guide.
+
+**You can fly!** The server is survival, but everyone can fly. Tap the jump key twice to take off. Falling can still hurt.
 
 Press `K` to see your Pokémon's details. When a Rose Cup tournament opens, click the message in chat to join.
 

@@ -70,6 +70,16 @@
   "page": "https://modrinth.com/mod/cobblemon-battle-tower"
  },
  {
+  "name": "Cobblemon Smartphone",
+  "version": "1.1.5",
+  "file": "cobblemon_smartphone-fabric-1.1.5.jar",
+  "url": "https://cdn.modrinth.com/data/n2f1HbK8/versions/LuahuFpR/cobblemon_smartphone-fabric-1.1.5.jar",
+  "sha512": "947E7BFB635CA506F216A6BD167BEBECFDB4243902C9484F50E7CBED5D41352FB1F1BBEF8B4D2CB52B995E40B2A34575CD7F2D2F6C6AEE072D290B08EDEFDA31",
+  "mb": 1.6,
+  "license": "MIT",
+  "page": "https://modrinth.com/mod/cobblemon-smartphone"
+ },
+ {
   "name": "Cobblemon Raid Dens",
   "version": "0.13.5+1.21.1",
   "file": "cobblemonraiddens-fabric-0.13.5+1.21.1.jar",

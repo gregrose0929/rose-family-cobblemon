@@ -38,6 +38,7 @@ public static class Installer
     const string ServerAddress = "mc.greg.download";
     const string UninstallKey = @"Software\Microsoft\Windows\CurrentVersion\Uninstall\RoseFamilyCobblemon";
     const string UserAgent = "rose-family-cobblemon-installer";
+    const string IconsFile = "rose-family-icons.jar"; // Built by make_phone_icons.py and embedded in this program.
 
     // name, initials, x, y, z, color, dimension folder. The y is a safe standing spot, which teleporting needs.
     static readonly object[][] Places =
@@ -122,6 +123,8 @@ public static class Installer
     {
         Directory.CreateDirectory(ModsDir);
         var wanted = Mods.Select(m => m.file).ToList();
+        wanted.Add(IconsFile);
+        File.WriteAllBytes(Path.Combine(ModsDir, IconsFile), Resource(IconsFile));
         foreach (var jar in Directory.GetFiles(ModsDir, "*.jar"))
         {
             if (!wanted.Contains(Path.GetFileName(jar)))
@@ -336,7 +339,18 @@ public static class Installer
         var copy = Path.Combine(InstallDir, "Rose Family Cobblemon Setup.exe");
         Directory.CreateDirectory(InstallDir);
         if (!string.Equals(me, copy, StringComparison.OrdinalIgnoreCase))
-            File.Copy(me, copy, true);
+        {
+            try
+            {
+                File.Copy(me, copy, true);
+            }
+            catch (IOException)
+            {
+                // Antivirus can hold the file briefly. An older uninstaller still works, so only a missing one is a problem.
+                if (!File.Exists(copy))
+                    throw;
+            }
+        }
         using (var key = Registry.CurrentUser.CreateSubKey(UninstallKey))
         {
             key.SetValue("DisplayName", "Rose Family Server: Cobblemon");
@@ -534,8 +548,8 @@ public sealed class SetupForm : Form
                 + "1.  Open the Minecraft Launcher.\n"
                 + string.Format("2.  Choose the \"{0}\" profile and press Play.\n", Installer.ProfileName)
                 + string.Format("3.  Go to Multiplayer and join \"{0}\".\n", Installer.ServerName)
-                + "4.  Press M for the map. Right-click a town or gym to teleport there, or choose\n"
-                + "     Enable Waypoint to see it around you as you travel.\n\n"
+                + "4.  You'll get a red phone: hold it and right-click to heal, change your team, and more.\n"
+                + "5.  Press M for the map, and right-click any town to teleport there.\n\n"
                 + "The first launch takes a few minutes, because there's a lot to load.",
                 MakeButton("Finish", Close));
     }
