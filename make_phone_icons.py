@@ -98,7 +98,60 @@ def guide(put, rect):
     rect(16, 25, 19, 28)
 
 
-ICONS = {"town": ((190, 60, 90, 255), town), "hunts": ((205, 110, 30, 255), hunts), "balls": ((60, 90, 170, 255), balls), "dex": ((50, 130, 80, 255), dex), "guide": ((120, 70, 170, 255), guide)}
+def today(put, rect):
+    # A sun.
+    for y in range(36):
+        for x in range(36):
+            d = math.hypot(x - 17.5, y - 17.5)
+            if d <= 6:
+                put(x, y, (255, 214, 80, 255))
+    for a in range(8):
+        for r in range(8, 13):
+            put(int(17.5 + r * math.cos(a * math.pi / 4)), int(17.5 + r * math.sin(a * math.pi / 4)), (255, 214, 80, 255))
+
+
+def cup(put, rect):
+    # A trophy.
+    gold = (255, 214, 80, 255)
+    rect(12, 8, 23, 17, gold)
+    rect(8, 9, 10, 14, gold)
+    rect(25, 9, 27, 14, gold)
+    rect(16, 18, 19, 23, gold)
+    rect(12, 24, 23, 27, gold)
+
+
+def go_home(put, rect):
+    # A house with an arrow going in.
+    rect(9, 15, 26, 27)
+    for i in range(9):
+        rect(17 - i, 7 + i, 18 + i, 7 + i)
+    rect(15, 20, 20, 27, (60, 90, 110, 255))
+
+
+def set_home(put, rect):
+    # A flag.
+    rect(11, 7, 13, 28)
+    for i in range(8):
+        rect(14, 8 + i, 27 - i, 8 + i, (240, 80, 90, 255))
+
+
+def go_back(put, rect):
+    # An arrow pointing left.
+    for i in range(8):
+        rect(8 + i, 17 - i, 9 + i, 18 + i)
+    rect(15, 15, 27, 20)
+
+
+def spawns(put, rect):
+    # A paw print.
+    for cx, cy, r in ((17.5, 22, 6), (9.5, 14, 3), (15, 10, 3), (21, 10, 3), (26, 14, 3)):
+        for y in range(36):
+            for x in range(36):
+                if math.hypot(x - cx, y - cy) <= r:
+                    put(x, y)
+
+
+ICONS = {"today": ((60, 130, 190, 255), today), "cup": ((150, 40, 60, 255), cup), "go_home": ((70, 120, 140, 255), go_home), "set_home": ((60, 110, 60, 255), set_home), "go_back": ((110, 110, 120, 255), go_back), "spawns": ((130, 90, 50, 255), spawns), "town": ((190, 60, 90, 255), town), "hunts": ((205, 110, 30, 255), hunts), "balls": ((60, 90, 170, 255), balls), "dex": ((50, 130, 80, 255), dex), "guide": ((120, 70, 170, 255), guide)}
 MOD = {"schemaVersion": 1, "id": "rose_family_icons", "version": "1.0.0", "name": "Rose Family Icons", "description": "Icons for the Rose Family Server's phone apps.", "environment": "client", "depends": {"minecraft": "~1.21.1"}, "license": "MIT"}
 with zipfile.ZipFile(sys.argv[1], "w", zipfile.ZIP_DEFLATED) as jar:
     jar.writestr("fabric.mod.json", json.dumps(MOD))

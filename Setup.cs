@@ -114,6 +114,7 @@ public static class Installer
         AddServerToList();
         AddMapWaypoints();
         MoveSummaryKey();
+        File.WriteAllBytes(Path.Combine(GameDir, "config", "cobblemon_smartphone.json"), Resource("phone-settings.json")); // The phone reads which apps to show from each PC.
         RegisterUninstaller();
         progress(1);
         log("Finished.");
@@ -324,7 +325,8 @@ public static class Installer
     {
         const string binding = "key_key.cobblemon.summary:key.keyboard.";
         var file = Path.Combine(GameDir, "options.txt");
-        var text = File.Exists(file) ? File.ReadAllText(file) : "";
+        // A new file needs the data version, or the game discards the key setting when it first loads.
+        var text = File.Exists(file) ? File.ReadAllText(file) : "version:3955\n";
         if (text.Contains(binding + "m") || text.Contains(binding + "k"))
             text = text.Replace(binding + "m", binding + "j").Replace(binding + "k", binding + "j");
         else if (!text.Contains(binding))

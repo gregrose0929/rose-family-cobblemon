@@ -20,6 +20,7 @@ CLIENT_MODS = (
     "accessories", "rctmod", "rctapi", "ForgeConfigAPIPort", "CobbleFurnies", "athena",
     "cobblemonraiddens", "geckolib", "cobblemon_battle_tower", "wild", "fightorflight", "followme",
     "CobbleDollars", "xaeroworldmap", "xaerominimap", "CobbleverseBadges", "cobblemon_smartphone",
+    "fabric-language-kotlin", "sodium-fabric", "entityculling", "dynamic-fps",
 )
 SERVER_ONLY = ("flan", "essential", "luckperms", "lithium", "ferritecore", "servercore", "spark", "daycareplus", "polymer", "pokedex", "Radical Gyms")
 
@@ -75,6 +76,7 @@ subprocess.run([
     f"/resource:{os.path.join(HERE, 'mods.json')},mods.json",
     f"/resource:{os.path.join(dist, 'servers.dat')},servers.dat",
     f"/resource:{icons},rose-family-icons.jar",
+    f"/resource:{os.path.join(HERE, 'phone-settings.json')},phone-settings.json",
     os.path.join(HERE, "Setup.cs"), os.path.join(dist, "Version.cs"),
 ], check=True)
 
