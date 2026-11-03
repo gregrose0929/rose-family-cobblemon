@@ -22,11 +22,11 @@ The first launch takes a few minutes, because there's a lot to load.
 
 **New here?** You'll start in Rose Town with a red phone, a Trainer's Guide book, Poké Balls, and potions. Follow the signs along the Trainer's Trail.
 
-**Hold the phone and right-click it** to do almost everything: heal your team, change your team in the PC, open the Pokédex and the shop, look up Pokémon, message family, go back to Rose Town, start hunts, get more Poké Balls, and open the guide.
+**Press `K` to open your phone, or hold it and right-click.** It does almost everything: heal your team, change your team in the PC, open the Pokédex and the shop, look up Pokémon, message family, go back to Rose Town, start hunts, get more Poké Balls, and open the guide.
 
 **You can fly!** The server is survival, but everyone can fly. Tap the jump key twice to take off. Falling can still hurt.
 
-Press `K` to see your Pokémon's details. When a Rose Cup tournament opens, click the message in chat to join.
+Press `J` to see your Pokémon's details. When a Rose Cup tournament opens, click the message in chat to join.
 
 ## Good to know
 

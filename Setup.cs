@@ -319,16 +319,16 @@ public static class Installer
             : "display_disabled_waypoints = true\n", Utf8NoBom);
     }
 
-    // Cobblemon's Pokemon summary and the map both default to M, and only one of them can have the key.
+    // Cobblemon's Pokemon summary defaults to M, which the map uses. K, used by an earlier version, opens the phone.
     static void MoveSummaryKey()
     {
         const string binding = "key_key.cobblemon.summary:key.keyboard.";
         var file = Path.Combine(GameDir, "options.txt");
         var text = File.Exists(file) ? File.ReadAllText(file) : "";
-        if (text.Contains(binding + "m"))
-            text = text.Replace(binding + "m", binding + "k");
+        if (text.Contains(binding + "m") || text.Contains(binding + "k"))
+            text = text.Replace(binding + "m", binding + "j").Replace(binding + "k", binding + "j");
         else if (!text.Contains(binding))
-            text += binding + "k\n";
+            text += binding + "j\n";
         File.WriteAllText(file, text, Utf8NoBom);
     }
 
@@ -548,7 +548,7 @@ public sealed class SetupForm : Form
                 + "1.  Open the Minecraft Launcher.\n"
                 + string.Format("2.  Choose the \"{0}\" profile and press Play.\n", Installer.ProfileName)
                 + string.Format("3.  Go to Multiplayer and join \"{0}\".\n", Installer.ServerName)
-                + "4.  You'll get a red phone: hold it and right-click to heal, change your team, and more.\n"
+                + "4.  You'll get a red phone: press K to heal, change your team, and more.\n"
                 + "5.  Press M for the map, and right-click any town to teleport there.\n\n"
                 + "The first launch takes a few minutes, because there's a lot to load.",
                 MakeButton("Finish", Close));
