@@ -331,7 +331,17 @@ public static class Installer
             text = text.Replace(binding + "m", binding + "j").Replace(binding + "k", binding + "j");
         else if (!text.Contains(binding))
             text += binding + "j\n";
+        text = ChangeDefaultKey(text, "key_key.companion_bonds.open_contest_tracker:key.keyboard.", "k", "i"); // K opens the phone.
+        text = ChangeDefaultKey(text, "key_key.companion_bonds.pet_interaction:key.keyboard.", "unknown", "v"); // Unbound by default.
         File.WriteAllText(file, text, Utf8NoBom);
+    }
+
+    // Leaves a key alone if the player already chose their own.
+    static string ChangeDefaultKey(string text, string binding, string defaultKey, string newKey)
+    {
+        if (text.Contains(binding + defaultKey))
+            return text.Replace(binding + defaultKey, binding + newKey);
+        return text.Contains(binding) ? text : text + binding + newKey + "\n";
     }
 
     // Lists the game under Settings > Apps, using a copy of this program as the uninstaller.

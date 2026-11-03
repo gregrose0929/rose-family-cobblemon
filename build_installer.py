@@ -21,7 +21,7 @@ CLIENT_MODS = (
     "cobblemonraiddens", "geckolib", "cobblemon_battle_tower", "wild", "fightorflight", "followme",
     "CobbleDollars", "xaeroworldmap", "xaerominimap", "CobbleverseBadges", "cobblemon_smartphone",
     "fabric-language-kotlin", "sodium-fabric", "entityculling", "dynamic-fps",
-    "cobbleworkers", "cobblemon-armors", "poke-clothing",
+    "cobbleworkers", "cobblemon-armors", "poke-clothing", "cobblemon-perfect-partners",
 )
 SERVER_ONLY = ("flan", "essential", "luckperms", "lithium", "ferritecore", "servercore", "spark", "daycareplus", "polymer", "pokedex", "Radical Gyms",
                "matthiesen", "spawnnotification", "timcore", "cobblemon-boosters", "cobblemon-npc-extensions", "SafePastures")

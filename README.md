@@ -68,3 +68,5 @@ No mods are stored in this repository. They belong to their authors, and each on
 3. Commit the changes and upload the new `.exe` to a new GitHub release, with its SHA-256 in the notes.
 
 **New in 1.9:** trainer outfits and Pokémon hats (craft a Tailoring Station, or look in the crafting book), and Pokémon helpers that work from a Pasture block.
+
+**New in 1.10:** hold `V` while looking at your Pokémon to pet it. Press `I` to see friendship, ribbons, and Contest progress.

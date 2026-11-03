@@ -70,6 +70,16 @@
   "page": "https://modrinth.com/mod/cobblemon"
  },
  {
+  "name": "Cobblemon: Perfect Partners",
+  "version": "3",
+  "file": "cobblemon-perfect-partners-fabric-1.4.0+1.8.jar",
+  "url": "https://cdn.modrinth.com/data/Mm4ksRsw/versions/OXgenzvR/cobblemon-perfect-partners-fabric-1.4.0%2B1.8.jar",
+  "sha512": "25FB9A24EC8AD8F75D978B58B0402B7D2D1D0BF69D965F884CECC5800FC18A4E3D8A9F835C77CC32741811B396F93EED38858044FEEA8D38A9B562E2E95DE384",
+  "mb": 0.8,
+  "license": "LicenseRef-All-Rights-Reserved",
+  "page": "https://modrinth.com/mod/perfectpartners"
+ },
+ {
   "name": "Cobblemon Battle Tower",
   "version": "1.11.23",
   "file": "cobblemon_battle_tower-fabric-1.11.23.jar",
