@@ -15,7 +15,23 @@ This sets up your game to play Cobblemon on the Rose Family Server. It takes abo
 
 The first launch takes a few minutes, because there's a lot to load.
 
-**Press `M` in the game to open the map.** Pokémon towns and gyms are already marked on it. The land itself fills in as people explore.
+**Press `M` in the game to open the map.** Pokémon towns and gyms are already on it, and the land fills in as people explore. Right-click any of them:
+
+- **Teleport to Waypoint** takes you there right away.
+- **Enable Waypoint** shows it around you as you travel. Choose **Disable Waypoint** when you're done, so your screen stays clear.
+
+**New here?** You'll start in Rose Town with a Trainer's Guide book, Poké Balls, and potions. Follow the signs along the Trainer's Trail, or type `/trigger guide` any time.
+
+| Type this | What it does |
+|---|---|
+| `/trigger guide` | Opens the guide |
+| `/trigger heal` | Heals your Pokémon |
+| `/trigger balls` | Gives you 32 Poké Balls |
+| `/trigger town` | Takes you back to Rose Town |
+| `/trigger dex` | Shows the Family Pokédex |
+| `/hunts` | Opens catching missions |
+
+Press `K` to see your Pokémon's details. When a Rose Cup tournament opens, click the message in chat to join.
 
 ## Good to know
 

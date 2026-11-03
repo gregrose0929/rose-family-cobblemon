@@ -19,7 +19,7 @@ CLIENT_MODS = (
     "Cobblemon-fabric", "fabric-api", "Cobblemon-MegaShowdown", "mega", "owo-lib", "owo", "architectury",
     "accessories", "rctmod", "rctapi", "ForgeConfigAPIPort", "CobbleFurnies", "athena",
     "cobblemonraiddens", "geckolib", "cobblemon_battle_tower", "wild", "fightorflight", "followme",
-    "CobbleDollars", "xaeroworldmap", "xaerominimap",
+    "CobbleDollars", "xaeroworldmap", "xaerominimap", "CobbleverseBadges",
 )
 SERVER_ONLY = ("flan", "essential", "luckperms", "lithium", "ferritecore", "servercore", "spark", "daycareplus", "polymer", "pokedex", "Radical Gyms")
 

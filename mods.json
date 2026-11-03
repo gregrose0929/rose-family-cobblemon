@@ -80,6 +80,16 @@
   "page": "https://modrinth.com/mod/cobblemonraiddens"
  },
  {
+  "name": "COBBLEVERSE: Badges & Trophies",
+  "version": "1.3",
+  "file": "CobbleverseBadges-1.3.jar",
+  "url": "https://cdn.modrinth.com/data/PHT3Zj0r/versions/3aQ0cMqp/CobbleverseBadges-1.3.jar",
+  "sha512": "C5CA78E885DEFA54D5CC530A3ED80E66C083CFC27C694D385A495FFD3D9506ED64C17CA2697599756D38803DFDBF099F4005F0FC231DB6F8DB3A3FB8F4FF76B8",
+  "mb": 0.1,
+  "license": "CC-BY-NC-ND-4.0",
+  "page": "https://modrinth.com/mod/cobbleverse-badges"
+ },
+ {
   "name": "Fabric API",
   "version": "0.116.17+1.21.1",
   "file": "fabric-api-0.116.17+1.21.1.jar",

@@ -39,26 +39,28 @@ public static class Installer
     const string UninstallKey = @"Software\Microsoft\Windows\CurrentVersion\Uninstall\RoseFamilyCobblemon";
     const string UserAgent = "rose-family-cobblemon-installer";
 
-    // name, initials, x, z, color, dimension folder
+    // name, initials, x, y, z, color, dimension folder. The y is a safe standing spot, which teleporting needs.
     static readonly object[][] Places =
     {
-        new object[] { "Cerulean City", "C", 624, 128, 9, "dim%0" },
-        new object[] { "Vermilion City", "V", 592, -464, 9, "dim%0" },
-        new object[] { "Viridian City", "V", -752, -816, 9, "dim%0" },
-        new object[] { "Saffron City", "S", -336, -1296, 9, "dim%0" },
-        new object[] { "Cinnabar Island", "C", 640, 1520, 9, "dim%0" },
-        new object[] { "Fuchsia City", "F", 96, -1888, 9, "dim%0" },
-        new object[] { "Pewter City", "P", 1968, -2768, 9, "dim%0" },
-        new object[] { "Celadon City", "C", -2272, -3200, 9, "dim%0" },
-        new object[] { "Cerulean Gym", "G", 752, 208, 14, "dim%0" },
-        new object[] { "Vermilion Gym", "G", 160, -464, 14, "dim%0" },
-        new object[] { "Celadon Gym", "G", -880, 80, 14, "dim%0" },
-        new object[] { "Fuchsia Gym", "G", -816, 848, 14, "dim%0" },
-        new object[] { "Saffron Gym", "G", -1392, -320, 14, "dim%0" },
-        new object[] { "Pewter Gym", "G", 1344, -2208, 14, "dim%0" },
-        new object[] { "Cinnabar Gym", "G", -272, -160, 14, "dim%-1" },
-        new object[] { "Blackthorn Gym", "G", 1200, -480, 14, "dim%1" },
-        new object[] { "Kanto League", "L", -416, 1904, 12, "dim%1" },
+        new object[] { "Rose Town", "R", 324, 65, -178, 12, "dim%0" },
+        new object[] { "Old Spawn", "O", 0, 75, 0, 2, "dim%0" },
+        new object[] { "Cerulean City", "C", 624, 63, 128, 9, "dim%0" },
+        new object[] { "Vermilion City", "V", 576, 64, -480, 9, "dim%0" },
+        new object[] { "Viridian City", "V", -752, 103, -816, 9, "dim%0" },
+        new object[] { "Saffron City", "S", -320, 65, -1304, 9, "dim%0" },
+        new object[] { "Cinnabar Island", "C", 632, 113, 1504, 9, "dim%0" },
+        new object[] { "Fuchsia City", "F", 80, 62, -1904, 9, "dim%0" },
+        new object[] { "Pewter City", "P", 1984, 100, -2784, 9, "dim%0" },
+        new object[] { "Celadon City", "C", -2256, 69, -3216, 9, "dim%0" },
+        new object[] { "Cerulean Gym", "G", 752, 63, 208, 14, "dim%0" },
+        new object[] { "Vermilion Gym", "G", 144, 85, -456, 14, "dim%0" },
+        new object[] { "Celadon Gym", "G", -872, 103, 88, 14, "dim%0" },
+        new object[] { "Fuchsia Gym", "G", -832, 63, 840, 14, "dim%0" },
+        new object[] { "Saffron Gym", "G", -1400, 71, -320, 14, "dim%0" },
+        new object[] { "Pewter Gym", "G", 1328, 79, -2200, 14, "dim%0" },
+        new object[] { "Cinnabar Gym", "G", -272, 86, -160, 14, "dim%-1" },
+        new object[] { "Blackthorn Gym", "G", 1184, 43, -464, 14, "dim%1" },
+        new object[] { "Kanto League", "L", -400, 34, 1904, 12, "dim%1" },
     };
 
     static readonly Encoding Utf8NoBom = new UTF8Encoding(false);
@@ -110,6 +112,7 @@ public static class Installer
         SetLauncherProfile();
         AddServerToList();
         AddMapWaypoints();
+        MoveSummaryKey();
         RegisterUninstaller();
         progress(1);
         log("Finished.");
@@ -281,23 +284,49 @@ public static class Installer
         File.WriteAllBytes(file, Resource("servers.dat"));
     }
 
+    // Places start hidden, so they only appear in the world once someone enables one from the map.
     static void AddMapWaypoints()
     {
-        var root = Path.Combine(GameDir, "XaeroWaypoints", "Multiplayer_" + ServerAddress);
-        foreach (var group in Places.GroupBy(p => (string)p[5]))
+        var root = Path.Combine(GameDir, "xaero", "minimap", "Multiplayer_" + ServerAddress);
+        foreach (var group in Places.GroupBy(p => (string)p[6]))
         {
             var folder = Path.Combine(root, group.Key);
             Directory.CreateDirectory(folder);
             var file = Path.Combine(folder, "mw$default_1.txt");
             var text = File.Exists(file) ? File.ReadAllText(file)
                 : "#\n#waypoint:name:initials:x:y:z:color:disabled:type:set:rotate_on_tp:tp_yaw:visibility_type:destination\n#\nsets:gui.xaero_default\n#\n";
+            var lines = text.TrimEnd('\n').Split('\n').ToList();
+            lines.RemoveAll(l => l.StartsWith("waypoint:Spawn:S:0:75:0:")); // Renamed to Old Spawn when Rose Town became the spawn point.
             foreach (var p in group)
             {
-                if (!text.Contains("waypoint:" + p[0] + ":"))
-                    text += string.Format("waypoint:{0}:{1}:{2}:~:{3}:{4}:false:0:gui.xaero_default:false:0:0:false\n", p[0], p[1], p[2], p[3], p[4]);
+                var line = string.Format("waypoint:{0}:{1}:{2}:{3}:{4}:{5}:true:0:gui.xaero_default:false:0:0:false", p[0], p[1], p[2], p[3], p[4], p[5]);
+                var existing = lines.FindIndex(l => l.StartsWith("waypoint:" + p[0] + ":"));
+                if (existing < 0)
+                    lines.Add(line);
+                else if (lines[existing].Contains(":~:"))
+                    lines[existing] = line; // From an older version, always visible with no height. Later choices are left alone.
             }
-            File.WriteAllText(file, text, Utf8NoBom);
+            File.WriteAllText(file, string.Join("\n", lines) + "\n", Utf8NoBom);
         }
+        // The map has to list hidden places too, or nobody could pick one.
+        var settings = Path.Combine(GameDir, "config", "xaero", "world-map", "client.cfg");
+        Directory.CreateDirectory(Path.GetDirectoryName(settings));
+        File.WriteAllText(settings, File.Exists(settings)
+            ? File.ReadAllText(settings).Replace("display_disabled_waypoints = false", "display_disabled_waypoints = true")
+            : "display_disabled_waypoints = true\n", Utf8NoBom);
+    }
+
+    // Cobblemon's Pokemon summary and the map both default to M, and only one of them can have the key.
+    static void MoveSummaryKey()
+    {
+        const string binding = "key_key.cobblemon.summary:key.keyboard.";
+        var file = Path.Combine(GameDir, "options.txt");
+        var text = File.Exists(file) ? File.ReadAllText(file) : "";
+        if (text.Contains(binding + "m"))
+            text = text.Replace(binding + "m", binding + "k");
+        else if (!text.Contains(binding))
+            text += binding + "k\n";
+        File.WriteAllText(file, text, Utf8NoBom);
     }
 
     // Lists the game under Settings > Apps, using a copy of this program as the uninstaller.
@@ -455,7 +484,7 @@ public sealed class SetupForm : Form
             + string.Format("  •  {0} mods, checked against the exact files tested with the server\n", Installer.Mods.Count)
             + string.Format("  •  A \"{0}\" profile in the Minecraft Launcher\n", Installer.ProfileName)
             + "  •  The server in your multiplayer list\n"
-            + "  •  Pokémon towns and gyms marked on the map\n\n"
+            + "  •  Pokémon towns and gyms on the map, ready to teleport to\n\n"
             + "Your other Minecraft worlds and mods aren't changed. You can remove this any time from Settings > Apps.",
             MakeButton(update ? "Update" : "Install", StartInstall), MakeButton("Cancel", Close));
     }
@@ -505,7 +534,8 @@ public sealed class SetupForm : Form
                 + "1.  Open the Minecraft Launcher.\n"
                 + string.Format("2.  Choose the \"{0}\" profile and press Play.\n", Installer.ProfileName)
                 + string.Format("3.  Go to Multiplayer and join \"{0}\".\n", Installer.ServerName)
-                + "4.  Press M in the game to open the map. Towns and gyms are marked on it.\n\n"
+                + "4.  Press M for the map. Right-click a town or gym to teleport there, or choose\n"
+                + "     Enable Waypoint to see it around you as you travel.\n\n"
                 + "The first launch takes a few minutes, because there's a lot to load.",
                 MakeButton("Finish", Close));
     }
