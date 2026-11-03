@@ -72,3 +72,5 @@ No mods are stored in this repository. They belong to their authors, and each on
 **New in 1.10:** hold `V` while looking at your Pokémon to pet it. Press `I` to see friendship, ribbons, and Contest progress.
 
 **New in 1.12:** a Daily Gift on your phone, and Rose Town's people have their own looks.
+
+**New in 1.13:** every app has its name on it, PokeNav shows who lives nearby, the minimap moved to the top right (turn it off with the Minimap app), hints tell you when you can right-click something, and the Shop's Sell button buys your spare items.

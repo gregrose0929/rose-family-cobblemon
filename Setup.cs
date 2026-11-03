@@ -114,6 +114,7 @@ public static class Installer
         AddServerToList();
         AddMapWaypoints();
         MoveSummaryKey();
+        MoveMinimap();
         File.WriteAllBytes(Path.Combine(GameDir, "config", "cobblemon_smartphone.json"), Resource("phone-settings.json")); // The phone reads which apps to show from each PC.
         RegisterUninstaller();
         progress(1);
@@ -333,6 +334,20 @@ public static class Installer
             text += binding + "j\n";
         text = ChangeDefaultKey(text, "key_key.companion_bonds.open_contest_tracker:key.keyboard.", "k", "i"); // K opens the phone.
         text = ChangeDefaultKey(text, "key_key.companion_bonds.pet_interaction:key.keyboard.", "unknown", "v"); // Unbound by default.
+        File.WriteAllText(file, text, Utf8NoBom);
+    }
+
+    // The team list sits in the top left, so the minimap goes in the top right.
+    static void MoveMinimap()
+    {
+        const string module = "module;id=xaerominimap:minimap;";
+        var file = Path.Combine(GameDir, "config", "xaerohud.txt");
+        var text = File.Exists(file) ? File.ReadAllText(file) : "";
+        if (text.Contains(module))
+            text = string.Join("\n", text.Split('\n').Select(line => line.StartsWith(module) ? line.Replace("fromRight=false", "fromRight=true") : line));
+        else
+            text += module + "x=0;y=0;centered=false;fromRight=true;fromBottom=false;flippedVer=false;flippedHor=false;\n";
+        Directory.CreateDirectory(Path.GetDirectoryName(file));
         File.WriteAllText(file, text, Utf8NoBom);
     }
 

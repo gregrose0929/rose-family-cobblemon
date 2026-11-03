@@ -1,8 +1,7 @@
 {
   "ignoreUpgrades": [
     "cobblemon_smartphone:crafting",
-    "cobblemon_smartphone:gps",
-    "cobblemon_smartphone:structure_compass"
+    "cobblemon_smartphone:cobblenav_pokenav"
   ],
   "cooldowns": {
     "healButton": 10,
@@ -21,7 +20,7 @@
     "enablePC": true,
     "enableCloud": true,
     "enablePokenav": true,
-    "enableFishingnav": true,
+    "enableFishingnav": false,
     "enableCobbleDollars": true,
     "enableWaystone": true,
     "enableTomsStorage": true,
@@ -30,8 +29,8 @@
     "enableRctTrainerCard": true,
     "enablePokedex": true,
     "enablePokeInfo": true,
-    "enableGps": true,
-    "enableStructureCompass": true,
+    "enableGps": false,
+    "enableStructureCompass": false,
     "enableScanner": true,
     "enableCrafting": true,
     "enableQuickActions": true,

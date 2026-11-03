@@ -110,6 +110,16 @@
   "page": "https://modrinth.com/mod/cobblemonraiddens"
  },
  {
+  "name": "Cobblemon PokeNav",
+  "version": "2.4.2",
+  "file": "cobblenav-fabric-2.4.2.jar",
+  "url": "https://cdn.modrinth.com/data/bI8Nt3uA/versions/wq3mHFqw/cobblenav-fabric-2.4.2.jar",
+  "sha512": "13429B8FFFB07FDE6781405D0B8DF9B4ED490A2D6B77E61A284753131A22B68B4F236DAA56A873F5268D0883F2D2800F82A4F1950357D4D03394BA216424A8BC",
+  "mb": 1.1,
+  "license": "MPL-2.0",
+  "page": "https://modrinth.com/mod/cobblemon-pokenav"
+ },
+ {
   "name": "COBBLEVERSE: Badges & Trophies",
   "version": "1.3",
   "file": "CobbleverseBadges-1.3.jar",

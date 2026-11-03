@@ -2,15 +2,64 @@
 import json
 import math
 import os
+import glob
+import re
 import struct
 import sys
 import zipfile
 import zlib
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import townspeople
+
 SIZE = 36
 WHITE = (255, 255, 255, 255)
 DARK = (35, 35, 40, 255)
 RED = (214, 52, 52, 255)
+
+
+def read_png(data):
+    """Reads an 8-bit RGBA or palette PNG."""
+    at, idat, palette, alpha = 8, b"", b"", b""
+    while at < len(data):
+        length = struct.unpack(">I", data[at:at + 4])[0]
+        kind, body = data[at + 4:at + 8], data[at + 8:at + 8 + length]
+        if kind == b"IHDR":
+            width, height, depth, color = struct.unpack(">IIBB", body[:10])
+            assert depth == 8 and color in (3, 6), (depth, color)
+            step = 4 if color == 6 else 1
+        elif kind == b"IDAT":
+            idat += body
+        elif kind == b"PLTE":
+            palette = body
+        elif kind == b"tRNS":
+            alpha = body
+        at += 12 + length
+    raw, rows, previous, at = zlib.decompress(idat), [], bytearray(width * step), 0
+    for _ in range(height):
+        kind = raw[at]
+        line = bytearray(raw[at + 1:at + 1 + width * step])
+        at += 1 + width * step
+        for i in range(width * step):
+            a = line[i - step] if i >= step else 0
+            b = previous[i]
+            c = previous[i - step] if i >= step else 0
+            if kind == 1:
+                line[i] = (line[i] + a) & 255
+            elif kind == 2:
+                line[i] = (line[i] + b) & 255
+            elif kind == 3:
+                line[i] = (line[i] + (a + b) // 2) & 255
+            elif kind == 4:
+                p = a + b - c
+                pa, pb, pc = abs(p - a), abs(p - b), abs(p - c)
+                line[i] = (line[i] + (a if pa <= pb and pa <= pc else b if pb <= pc else c)) & 255
+        if color == 6:
+            rows.append([tuple(line[x * 4:x * 4 + 4]) for x in range(width)])
+        else:
+            rows.append([tuple(palette[i * 3:i * 3 + 3]) + (alpha[i] if i < len(alpha) else 255,) for i in line])
+        previous = line
+    return width, rows
 
 
 def png(pixels, size=SIZE):
@@ -21,7 +70,30 @@ def png(pixels, size=SIZE):
     return b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", struct.pack(">IIBBBBB", size, size, 8, 6, 0, 0, 0)) + chunk(b"IDAT", zlib.compress(rows)) + chunk(b"IEND", b"")
 
 
-def icon(background, draw, hover):
+# A tiny 3x5 alphabet, so an app's name is on the icon itself.
+FONT = {"A": "010101111101101", "B": "110101110101110", "C": "011100100100011", "D": "110101101101110", "E": "111100110100111", "F": "111100110100100", "G": "011100101101011",
+        "H": "101101111101101", "I": "111010010010111", "J": "001001001101010", "K": "101101110101101", "L": "100100100100111", "M": "101111111101101", "N": "110101101101101",
+        "O": "010101101101010", "P": "110101110100100", "Q": "010101101111011", "R": "110101110101101", "S": "011100010001110", "T": "111010010010010", "U": "101101101101111",
+        "V": "101101101101010", "W": "101101111111101", "X": "101101010101101", "Y": "101101010010010", "Z": "111001010100111", " ": "000000000000000"}
+
+
+def caption(pixels, name):
+    # A dark strip across the bottom, inside the icon's rounded corners, with the name in white.
+    for y in range(27, 36):
+        for x in range(SIZE):
+            if pixels[y][x][3]:
+                pixels[y][x] = tuple(int(c * 0.35) for c in pixels[y][x][:3]) + (255,)
+    width = len(name) * 4 - 1
+    left = (SIZE - width) // 2
+    for i, letter in enumerate(name.upper()):
+        bits = FONT[letter]
+        for row in range(5):
+            for col in range(3):
+                if bits[row * 3 + col] == "1":
+                    pixels[29 + row][left + i * 4 + col] = WHITE
+
+
+def icon(background, draw, hover, name):
     color = tuple(min(255, c + 45) for c in background[:3]) + (255,) if hover else background
     pixels = [[(0, 0, 0, 0)] * SIZE for _ in range(SIZE)]
     for y in range(SIZE):
@@ -32,6 +104,7 @@ def icon(background, draw, hover):
                 pixels[y][x] = color
 
     def put(x, y, value=WHITE):
+        y -= 4  # leaves room for the name underneath
         if 0 <= x < SIZE and 0 <= y < SIZE:
             pixels[y][x] = value
 
@@ -41,6 +114,7 @@ def icon(background, draw, hover):
                 put(x, y, value)
 
     draw(put, rect)
+    caption(pixels, name)
     return png(pixels)
 
 
@@ -167,6 +241,16 @@ def travel(put, rect):
                 put(x, y)
 
 
+def minimap(put, rect):
+    # A small folded map.
+    rect(8, 10, 27, 27, (235, 225, 190, 255))
+    rect(14, 10, 15, 27, (200, 190, 150, 255))
+    rect(21, 10, 22, 27, (200, 190, 150, 255))
+    rect(10, 14, 19, 15, (90, 150, 90, 255))
+    rect(17, 20, 25, 21, (80, 130, 200, 255))
+    rect(23, 12, 25, 14, RED)
+
+
 def gift(put, rect):
     # A wrapped present.
     box, ribbon = (240, 240, 240, 255), (235, 70, 70, 255)
@@ -178,87 +262,40 @@ def gift(put, rect):
     rect(20, 7, 24, 10, ribbon)
 
 
-ICONS = {"gift": ((170, 60, 130, 255), gift), "travel": ((40, 140, 140, 255), travel), "today": ((60, 130, 190, 255), today), "cup": ((150, 40, 60, 255), cup), "go_home": ((70, 120, 140, 255), go_home), "set_home": ((60, 110, 60, 255), set_home), "go_back": ((110, 110, 120, 255), go_back), "spawns": ((130, 90, 50, 255), spawns), "town": ((190, 60, 90, 255), town), "hunts": ((205, 110, 30, 255), hunts), "balls": ((60, 90, 170, 255), balls), "dex": ((50, 130, 80, 255), dex), "guide": ((120, 70, 170, 255), guide)}
-def skin(tone, hair, shirt, sleeves, pants, shoes, extra=None):
-    """Paints a 64x64 player-layout skin, front details on the head and chest."""
-    pixels = [[(0, 0, 0, 0)] * 64 for _ in range(64)]
-
-    def fill(x1, y1, x2, y2, color):
-        for y in range(y1, y2 + 1):
-            for x in range(x1, x2 + 1):
-                pixels[y][x] = color + (255,)
-
-    fill(0, 0, 31, 15, tone)  # head, all sides
-    fill(8, 0, 15, 7, hair)
-    fill(0, 8, 31, 9, hair)
-    fill(24, 8, 31, 15, hair)
-    for x, y in ((9, 12), (14, 12)):
-        fill(x, y, x, y, (40, 40, 50))
-    fill(11, 14, 12, 14, (150, 80, 70))
-    fill(16, 16, 39, 31, shirt)  # body
-    fill(40, 16, 55, 31, sleeves)  # arms
-    fill(32, 48, 47, 63, sleeves)
-    fill(40, 28, 55, 31, tone)
-    fill(32, 60, 47, 63, tone)
-    fill(0, 16, 15, 31, pants)  # legs
-    fill(16, 48, 31, 63, pants)
-    fill(0, 28, 15, 31, shoes)
-    fill(16, 60, 31, 63, shoes)
-    if extra:
-        extra(fill)
-    return png(pixels, 64)
-
-
-def professor_look(fill):
-    fill(23, 20, 24, 31, (170, 60, 90))  # tie
-    fill(21, 20, 22, 31, (120, 170, 210))  # shirt under the coat
-    fill(25, 20, 26, 31, (120, 170, 210))
-    fill(9, 11, 10, 11, (60, 60, 70))  # glasses
-    fill(13, 11, 14, 11, (60, 60, 70))
-
-
-def angler_look(fill):
-    fill(8, 8, 15, 9, (70, 110, 70))  # bucket hat
-    fill(0, 8, 7, 9, (70, 110, 70))
-    fill(16, 8, 31, 9, (70, 110, 70))
-    fill(8, 0, 15, 7, (70, 110, 70))
-    fill(9, 13, 14, 15, (215, 215, 215))  # beard
-    fill(23, 20, 24, 31, (90, 80, 60))  # vest opening
-    fill(11, 14, 12, 14, (150, 80, 70))
-
-
-def ranger_look(fill):
-    fill(8, 0, 15, 8, (190, 50, 50))  # cap
-    fill(0, 8, 31, 8, (190, 50, 50))
-    fill(20, 20, 27, 21, (190, 50, 50))  # neckerchief
-    fill(20, 26, 27, 26, (60, 50, 40))  # belt
-
-
-def lily_look(fill):
-    fill(20, 20, 27, 21, (255, 255, 255))  # collar
-    fill(0, 16, 15, 21, (240, 130, 170))  # dress over the legs
-    fill(16, 48, 31, 53, (240, 130, 170))
-    fill(8, 10, 8, 15, (120, 75, 40))  # pigtails
-    fill(15, 10, 15, 15, (120, 75, 40))
-
-
-TOWNSPEOPLE = {
-    "professor": ((225, 180, 150), (190, 190, 195), (235, 235, 240), (235, 235, 240), (70, 70, 85), (50, 40, 35), professor_look),
-    "angler": ((205, 160, 125), (215, 215, 215), (120, 110, 80), (160, 145, 110), (60, 80, 120), (70, 50, 35), angler_look),
-    "ranger": ((170, 120, 90), (50, 35, 30), (70, 120, 80), (70, 120, 80), (95, 85, 60), (50, 40, 35), ranger_look),
-    "lily": ((240, 200, 170), (120, 75, 40), (240, 130, 170), (240, 130, 170), (240, 200, 170), (200, 60, 90), lily_look),
-}
-MOD = {"schemaVersion": 1, "id": "rose_family_icons", "version": "1.3.0", "name": "Rose Family Icons", "description": "Icons for the Rose Family Server's phone apps, plus wording for server-only mods.", "environment": "client", "depends": {"minecraft": "~1.21.1"}, "license": "MIT"}
+ICONS = {"travel": ("Travel", (40, 140, 140, 255), travel), "gift": ("Gift", (170, 60, 130, 255), gift), "hunts": ("Hunts", (205, 110, 30, 255), hunts), "balls": ("Balls", (60, 90, 170, 255), balls),
+         "dex": ("Family", (50, 130, 80, 255), dex), "today": ("Today", (60, 130, 190, 255), today), "cup": ("Cup", (150, 40, 60, 255), cup), "home": ("Home", (70, 120, 140, 255), go_home),
+         "minimap": ("Minimap", (70, 90, 80, 255), minimap), "guide": ("Guide", (120, 70, 170, 255), guide)}
+# Long names for when you hover over an app.
+NAMES = {"travel": "Travel: fly to any city or gym", "gift": "Daily Gift", "hunts": "Hunts: catching missions", "balls": "Free Pok\u00e9 Balls", "dex": "Family Pok\u00e9dex", "today": "Today: time and weather",
+         "cup": "Rose Cup", "home": "Home: go home, set home, or go back", "minimap": "Minimap: on or off", "guide": "Trainer's Guide", "pc": "PC: change your team", "cloud": "Item Bag (your Ender Chest)", "cobbledollars_shop": "Shop: buy and sell",
+         "rct_trainer_card": "Trainer Card", "pokedex": "Pok\u00e9dex", "pokeinfo": "Pok\u00e9mon Info", "cobblenav_pokenav": "PokeNav: who lives nearby", "crafting": "Crafting Table", "social": "Messages"}
+# The phone's own icons get names too.
+NATIVE_LABELS = {"pc": "PC", "cloud": "Bag", "cobbledollars": "Shop", "pokedex": "Pokedex", "pokeinfo": "Info", "pokenav": "PokeNav", "crafting": "Craft", "social": "Message", "trainer": "Card", "trainer_card": "Card", "rct_trainer_card": "Card", "rct": "Card", "trainercard": "Card", "fishnav": "FishNav"}
+MOD = {"schemaVersion": 1, "id": "rose_family_icons", "version": "1.5.0", "name": "Rose Family Icons", "description": "Icons for the Rose Family Server's phone apps, plus wording for server-only mods.", "environment": "client", "depends": {"minecraft": "~1.21.1"}, "license": "MIT"}
 with zipfile.ZipFile(sys.argv[1], "w", zipfile.ZIP_DEFLATED) as jar:
     jar.writestr("fabric.mod.json", json.dumps(MOD))
-    for name, (background, draw) in ICONS.items():
-        jar.writestr(f"assets/rose_family/textures/gui/buttons/{name}.png", icon(background, draw, False))
-        jar.writestr(f"assets/rose_family/textures/gui/buttons/{name}_hover.png", icon(background, draw, True))
-    for key, look in TOWNSPEOPLE.items():
-        jar.writestr(f"assets/rose_family/textures/npcs/{key}.png", skin(*look))
+    for name, (label, background, draw) in ICONS.items():
+        jar.writestr(f"assets/rose_family/textures/gui/buttons/{name}.png", icon(background, draw, False, label))
+        jar.writestr(f"assets/rose_family/textures/gui/buttons/{name}_hover.png", icon(background, draw, True, label))
+    wording = {f"cobblemon_smartphone.action.{key}": value for key, value in NAMES.items()}
+    jar.writestr("assets/cobblemon_smartphone/lang/en_us.json", json.dumps(wording, ensure_ascii=False))
+    jar.writestr("assets/cobbledollars/lang/en_us.json", json.dumps({"gui.cobbledollars.bank": "Sell", "screen.cobbledollars.bank": "Sell Items"}))
+    if len(sys.argv) > 2:
+        with zipfile.ZipFile(glob.glob(os.path.join(sys.argv[2], "cobblemon_smartphone*.jar"))[0]) as phone:
+            for path in phone.namelist():
+                found = re.fullmatch(r"assets/cobblemon_smartphone/textures/gui/buttons/([a-z_0-9]+?)(_hover)?\.png", path)
+                if found and found.group(1) in NATIVE_LABELS:
+                    size, pixels = read_png(phone.read(path))
+                    if size == SIZE:
+                        caption(pixels, NATIVE_LABELS[found.group(1)])
+                        jar.writestr(path, png(pixels))
+                        print("named", found.group(1))
+    for key, (geo, pixels) in townspeople.build().items():
+        jar.writestr(f"assets/rose_family/textures/npcs/{key}.png", png(pixels, townspeople.SIZE))
+        jar.writestr(f"assets/rose_family/bedrock/npcs/models/{key}.geo.json", json.dumps(geo))
         jar.writestr(f"assets/rose_family/bedrock/npcs/variations/{key}/0_{key}.json", json.dumps({
             "name": f"rose:{key}", "order": 0, "variations": [{
-                "aspects": [], "layers": [], "model": "cobblemon:steve.geo", "poser": "cobblemon:standard", "texture": f"rose_family:textures/npcs/{key}.png"}]}))
+                "aspects": [], "layers": [], "model": f"rose_family:{key}.geo", "poser": "cobblemon:standard", "texture": f"rose_family:textures/npcs/{key}.png"}]}))
     # Server-only mods send text by key, so the wording has to be on each player's PC.
     with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "server-mod-wording.json"), encoding="utf-8") as handle:
         for path, wording in json.load(handle).items():

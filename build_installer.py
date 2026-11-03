@@ -21,7 +21,7 @@ CLIENT_MODS = (
     "cobblemonraiddens", "geckolib", "cobblemon_battle_tower", "wild", "fightorflight", "followme",
     "CobbleDollars", "xaeroworldmap", "xaerominimap", "CobbleverseBadges", "cobblemon_smartphone",
     "fabric-language-kotlin", "sodium-fabric", "entityculling", "dynamic-fps",
-    "cobbleworkers", "cobblemon-armors", "poke-clothing", "cobblemon-perfect-partners",
+    "cobbleworkers", "cobblemon-armors", "poke-clothing", "cobblemon-perfect-partners", "cobblenav",
 )
 SERVER_ONLY = ("flan", "essential", "luckperms", "lithium", "ferritecore", "servercore", "spark", "daycareplus", "polymer", "pokedex", "Radical Gyms",
                "matthiesen", "spawnnotification", "timcore", "cobblemon-boosters", "cobblemon-npc-extensions", "SafePastures")
@@ -68,7 +68,7 @@ with open(os.path.join(dist, "Version.cs"), "w", encoding="ascii") as handle:
     handle.write(f'[assembly: System.Reflection.AssemblyVersion("{VERSION}.0")]\n[assembly: System.Reflection.AssemblyFileVersion("{VERSION}.0")]\n')
 output = os.path.join(dist, "Rose-Family-Cobblemon-Setup.exe")
 icons = os.path.join(dist, "rose-family-icons.jar")
-subprocess.run([sys.executable, os.path.join(HERE, "make_phone_icons.py"), icons], check=True)
+subprocess.run([sys.executable, os.path.join(HERE, "make_phone_icons.py"), icons, MOD_FOLDER], check=True)
 subprocess.run([
     os.path.join(os.environ["WINDIR"], "Microsoft.NET", "Framework64", "v4.0.30319", "csc.exe"),
     "/nologo", "/target:winexe", "/optimize+", f"/out:{output}",
