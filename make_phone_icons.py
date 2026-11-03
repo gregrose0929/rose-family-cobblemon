@@ -13,12 +13,12 @@ DARK = (35, 35, 40, 255)
 RED = (214, 52, 52, 255)
 
 
-def png(pixels):
+def png(pixels, size=SIZE):
     def chunk(kind, data):
         return struct.pack(">I", len(data)) + kind + data + struct.pack(">I", zlib.crc32(kind + data))
 
-    rows = b"".join(b"\x00" + bytes(c for x in range(SIZE) for c in pixels[y][x]) for y in range(SIZE))
-    return b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", struct.pack(">IIBBBBB", SIZE, SIZE, 8, 6, 0, 0, 0)) + chunk(b"IDAT", zlib.compress(rows)) + chunk(b"IEND", b"")
+    rows = b"".join(b"\x00" + bytes(c for x in range(size) for c in pixels[y][x]) for y in range(size))
+    return b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", struct.pack(">IIBBBBB", size, size, 8, 6, 0, 0, 0)) + chunk(b"IDAT", zlib.compress(rows)) + chunk(b"IEND", b"")
 
 
 def icon(background, draw, hover):
@@ -167,13 +167,98 @@ def travel(put, rect):
                 put(x, y)
 
 
-ICONS = {"travel": ((40, 140, 140, 255), travel), "today": ((60, 130, 190, 255), today), "cup": ((150, 40, 60, 255), cup), "go_home": ((70, 120, 140, 255), go_home), "set_home": ((60, 110, 60, 255), set_home), "go_back": ((110, 110, 120, 255), go_back), "spawns": ((130, 90, 50, 255), spawns), "town": ((190, 60, 90, 255), town), "hunts": ((205, 110, 30, 255), hunts), "balls": ((60, 90, 170, 255), balls), "dex": ((50, 130, 80, 255), dex), "guide": ((120, 70, 170, 255), guide)}
-MOD = {"schemaVersion": 1, "id": "rose_family_icons", "version": "1.2.0", "name": "Rose Family Icons", "description": "Icons for the Rose Family Server's phone apps, plus wording for server-only mods.", "environment": "client", "depends": {"minecraft": "~1.21.1"}, "license": "MIT"}
+def gift(put, rect):
+    # A wrapped present.
+    box, ribbon = (240, 240, 240, 255), (235, 70, 70, 255)
+    rect(8, 15, 27, 28, box)
+    rect(7, 11, 28, 15, box)
+    rect(16, 11, 19, 28, ribbon)
+    rect(7, 13, 28, 14, ribbon)
+    rect(11, 7, 15, 10, ribbon)
+    rect(20, 7, 24, 10, ribbon)
+
+
+ICONS = {"gift": ((170, 60, 130, 255), gift), "travel": ((40, 140, 140, 255), travel), "today": ((60, 130, 190, 255), today), "cup": ((150, 40, 60, 255), cup), "go_home": ((70, 120, 140, 255), go_home), "set_home": ((60, 110, 60, 255), set_home), "go_back": ((110, 110, 120, 255), go_back), "spawns": ((130, 90, 50, 255), spawns), "town": ((190, 60, 90, 255), town), "hunts": ((205, 110, 30, 255), hunts), "balls": ((60, 90, 170, 255), balls), "dex": ((50, 130, 80, 255), dex), "guide": ((120, 70, 170, 255), guide)}
+def skin(tone, hair, shirt, sleeves, pants, shoes, extra=None):
+    """Paints a 64x64 player-layout skin, front details on the head and chest."""
+    pixels = [[(0, 0, 0, 0)] * 64 for _ in range(64)]
+
+    def fill(x1, y1, x2, y2, color):
+        for y in range(y1, y2 + 1):
+            for x in range(x1, x2 + 1):
+                pixels[y][x] = color + (255,)
+
+    fill(0, 0, 31, 15, tone)  # head, all sides
+    fill(8, 0, 15, 7, hair)
+    fill(0, 8, 31, 9, hair)
+    fill(24, 8, 31, 15, hair)
+    for x, y in ((9, 12), (14, 12)):
+        fill(x, y, x, y, (40, 40, 50))
+    fill(11, 14, 12, 14, (150, 80, 70))
+    fill(16, 16, 39, 31, shirt)  # body
+    fill(40, 16, 55, 31, sleeves)  # arms
+    fill(32, 48, 47, 63, sleeves)
+    fill(40, 28, 55, 31, tone)
+    fill(32, 60, 47, 63, tone)
+    fill(0, 16, 15, 31, pants)  # legs
+    fill(16, 48, 31, 63, pants)
+    fill(0, 28, 15, 31, shoes)
+    fill(16, 60, 31, 63, shoes)
+    if extra:
+        extra(fill)
+    return png(pixels, 64)
+
+
+def professor_look(fill):
+    fill(23, 20, 24, 31, (170, 60, 90))  # tie
+    fill(21, 20, 22, 31, (120, 170, 210))  # shirt under the coat
+    fill(25, 20, 26, 31, (120, 170, 210))
+    fill(9, 11, 10, 11, (60, 60, 70))  # glasses
+    fill(13, 11, 14, 11, (60, 60, 70))
+
+
+def angler_look(fill):
+    fill(8, 8, 15, 9, (70, 110, 70))  # bucket hat
+    fill(0, 8, 7, 9, (70, 110, 70))
+    fill(16, 8, 31, 9, (70, 110, 70))
+    fill(8, 0, 15, 7, (70, 110, 70))
+    fill(9, 13, 14, 15, (215, 215, 215))  # beard
+    fill(23, 20, 24, 31, (90, 80, 60))  # vest opening
+    fill(11, 14, 12, 14, (150, 80, 70))
+
+
+def ranger_look(fill):
+    fill(8, 0, 15, 8, (190, 50, 50))  # cap
+    fill(0, 8, 31, 8, (190, 50, 50))
+    fill(20, 20, 27, 21, (190, 50, 50))  # neckerchief
+    fill(20, 26, 27, 26, (60, 50, 40))  # belt
+
+
+def lily_look(fill):
+    fill(20, 20, 27, 21, (255, 255, 255))  # collar
+    fill(0, 16, 15, 21, (240, 130, 170))  # dress over the legs
+    fill(16, 48, 31, 53, (240, 130, 170))
+    fill(8, 10, 8, 15, (120, 75, 40))  # pigtails
+    fill(15, 10, 15, 15, (120, 75, 40))
+
+
+TOWNSPEOPLE = {
+    "professor": ((225, 180, 150), (190, 190, 195), (235, 235, 240), (235, 235, 240), (70, 70, 85), (50, 40, 35), professor_look),
+    "angler": ((205, 160, 125), (215, 215, 215), (120, 110, 80), (160, 145, 110), (60, 80, 120), (70, 50, 35), angler_look),
+    "ranger": ((170, 120, 90), (50, 35, 30), (70, 120, 80), (70, 120, 80), (95, 85, 60), (50, 40, 35), ranger_look),
+    "lily": ((240, 200, 170), (120, 75, 40), (240, 130, 170), (240, 130, 170), (240, 200, 170), (200, 60, 90), lily_look),
+}
+MOD = {"schemaVersion": 1, "id": "rose_family_icons", "version": "1.3.0", "name": "Rose Family Icons", "description": "Icons for the Rose Family Server's phone apps, plus wording for server-only mods.", "environment": "client", "depends": {"minecraft": "~1.21.1"}, "license": "MIT"}
 with zipfile.ZipFile(sys.argv[1], "w", zipfile.ZIP_DEFLATED) as jar:
     jar.writestr("fabric.mod.json", json.dumps(MOD))
     for name, (background, draw) in ICONS.items():
         jar.writestr(f"assets/rose_family/textures/gui/buttons/{name}.png", icon(background, draw, False))
         jar.writestr(f"assets/rose_family/textures/gui/buttons/{name}_hover.png", icon(background, draw, True))
+    for key, look in TOWNSPEOPLE.items():
+        jar.writestr(f"assets/rose_family/textures/npcs/{key}.png", skin(*look))
+        jar.writestr(f"assets/rose_family/bedrock/npcs/variations/{key}/0_{key}.json", json.dumps({
+            "name": f"rose:{key}", "order": 0, "variations": [{
+                "aspects": [], "layers": [], "model": "cobblemon:steve.geo", "poser": "cobblemon:standard", "texture": f"rose_family:textures/npcs/{key}.png"}]}))
     # Server-only mods send text by key, so the wording has to be on each player's PC.
     with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "server-mod-wording.json"), encoding="utf-8") as handle:
         for path, wording in json.load(handle).items():

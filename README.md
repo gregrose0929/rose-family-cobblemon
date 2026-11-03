@@ -70,3 +70,5 @@ No mods are stored in this repository. They belong to their authors, and each on
 **New in 1.9:** trainer outfits and Pokémon hats (craft a Tailoring Station, or look in the crafting book), and Pokémon helpers that work from a Pasture block.
 
 **New in 1.10:** hold `V` while looking at your Pokémon to pet it. Press `I` to see friendship, ribbons, and Contest progress.
+
+**New in 1.12:** a Daily Gift on your phone, and Rose Town's people have their own looks.
