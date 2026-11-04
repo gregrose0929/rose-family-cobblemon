@@ -262,11 +262,11 @@ def gift(put, rect):
     rect(20, 7, 24, 10, ribbon)
 
 
-ICONS = {"travel": ("Travel", (40, 140, 140, 255), travel), "gift": ("Gift", (170, 60, 130, 255), gift), "hunts": ("Hunts", (205, 110, 30, 255), hunts), "balls": ("Balls", (60, 90, 170, 255), balls),
+ICONS = {"travel": ("Travel", (40, 140, 140, 255), travel), "gift": ("Gift", (170, 60, 130, 255), gift), "hunts": ("Hunts", (205, 110, 30, 255), hunts), 
          "dex": ("Family", (50, 130, 80, 255), dex), "today": ("Today", (60, 130, 190, 255), today), "cup": ("Cup", (150, 40, 60, 255), cup), "home": ("Home", (70, 120, 140, 255), go_home),
          "minimap": ("Minimap", (70, 90, 80, 255), minimap), "guide": ("Guide", (120, 70, 170, 255), guide)}
 # Long names for when you hover over an app.
-NAMES = {"travel": "Travel: fly to any city or gym", "gift": "Daily Gift", "hunts": "Hunts: catching missions", "balls": "Free Pok\u00e9 Balls", "dex": "Family Pok\u00e9dex", "today": "Today: time and weather",
+NAMES = {"travel": "Travel: fly to any city or gym", "gift": "Daily Gift", "hunts": "Hunts: catching missions", "dex": "Family Pok\u00e9dex", "today": "Today: time and weather",
          "cup": "Rose Cup", "home": "Home: go home, set home, or go back", "minimap": "Minimap: on or off", "guide": "Trainer's Guide", "pc": "PC: change your team", "cloud": "Item Bag (your Ender Chest)", "cobbledollars_shop": "Shop: buy and sell",
          "rct_trainer_card": "Trainer Card", "pokedex": "Pok\u00e9dex", "pokeinfo": "Pok\u00e9mon Info", "cobblenav_pokenav": "PokeNav: who lives nearby", "crafting": "Crafting Table", "social": "Messages"}
 # The phone's own icons get names too.

@@ -22,7 +22,7 @@ The first launch takes a few minutes, because there's a lot to load.
 
 **New here?** You'll start in Rose Town with a red phone, a Trainer's Guide book, Poké Balls, and potions. Follow the signs along the Trainer's Trail.
 
-**Press `K` to open your phone.** Use it to change your team in the PC, open the Pokédex and the shop, look up Pokémon, message family, go back to Rose Town or your home, see the time and what spawns nearby, check the Rose Cup, start hunts, get more Poké Balls, and open the guide. If you lose it, a new one appears in your backpack.
+**Press `K` to open your phone.** Use it to change your team in the PC, open the Pokédex and the shop, look up Pokémon, message family, go back to Rose Town or your home, see the time and what spawns nearby, check the Rose Cup, start hunts, and open the guide. If you lose it, a new one appears in your backpack.
 
 **To heal your team, visit a Pokémon Center.** Every town has one with Healing Machines to right-click, and Nurse Joy works at the one in Rose Town. Potions and Revives work anywhere.
 
