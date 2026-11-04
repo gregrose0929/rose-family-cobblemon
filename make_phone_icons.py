@@ -271,7 +271,7 @@ NAMES = {"travel": "Travel: fly to any city or gym", "gift": "Daily Gift", "hunt
          "rct_trainer_card": "Trainer Card", "pokedex": "Pok\u00e9dex", "pokeinfo": "Pok\u00e9mon Info", "cobblenav_pokenav": "PokeNav: who lives nearby", "crafting": "Crafting Table", "social": "Messages"}
 # The phone's own icons get names too.
 NATIVE_LABELS = {"pc": "PC", "cloud": "Bag", "cobbledollars": "Shop", "pokedex": "Pokedex", "pokeinfo": "Info", "pokenav": "PokeNav", "crafting": "Craft", "social": "Message", "trainer": "Card", "trainer_card": "Card", "rct_trainer_card": "Card", "rct": "Card", "trainercard": "Card", "fishnav": "FishNav"}
-MOD = {"schemaVersion": 1, "id": "rose_family_icons", "version": "1.7.0", "name": "Rose Family Icons", "description": "Icons for the Rose Family Server's phone apps, plus wording for server-only mods.", "environment": "*", "entrypoints": {"main": ["rose.fixes.RoseFixes"], "client": ["rose.fixes.RoseClient"]}, "depends": {"minecraft": "~1.21.1"}, "license": "MIT"}
+MOD = {"schemaVersion": 1, "id": "rose_family_icons", "version": "1.7.1", "name": "Rose Family Icons", "description": "Icons for the Rose Family Server's phone apps, plus wording for server-only mods.", "environment": "*", "entrypoints": {"main": ["rose.fixes.RoseFixes"], "client": ["rose.fixes.RoseClient"]}, "depends": {"minecraft": "~1.21.1"}, "license": "MIT"}
 with zipfile.ZipFile(sys.argv[1], "w", zipfile.ZIP_DEFLATED) as jar:
     jar.writestr("fabric.mod.json", json.dumps(MOD))
     classes = os.path.join(os.path.dirname(os.path.abspath(__file__)), "rose_fixes", "rose", "fixes")
@@ -284,7 +284,7 @@ with zipfile.ZipFile(sys.argv[1], "w", zipfile.ZIP_DEFLATED) as jar:
     wording = {f"cobblemon_smartphone.action.{key}": value for key, value in NAMES.items()}
     jar.writestr("assets/cobblemon_smartphone/lang/en_us.json", json.dumps(wording, ensure_ascii=False))
     # You can already walk during battles, so R only hides the menu.
-    jar.writestr("assets/cobblemon/lang/en_us.json", json.dumps({'cobblemon.battle.ui.hide_label': 'Hold right mouse to look around. Press %1$s to hide this menu.'}))
+    jar.writestr("assets/cobblemon/lang/en_us.json", json.dumps({'cobblemon.battle.ui.hide_label': 'Press %1$s to hide this menu.'}))
     jar.writestr("assets/cobbledollars/lang/en_us.json", json.dumps({"gui.cobbledollars.bank": "Sell", "screen.cobbledollars.bank": "Sell Items"}))
     if len(sys.argv) > 2:
         with zipfile.ZipFile(glob.glob(os.path.join(sys.argv[2], "cobblemon_smartphone*.jar"))[0]) as phone:
