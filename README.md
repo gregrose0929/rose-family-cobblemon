@@ -76,3 +76,5 @@ No mods are stored in this repository. They belong to their authors, and each on
 **New in 1.13:** every app has its name on it, PokeNav shows who lives nearby, the minimap moved to the top right (turn it off with the Minimap app), hints tell you when you can right-click something, and the Shop's Sell button buys your spare items.
 
 **New in 1.14:** walk during battles without pressing R, and right-clicking with a potion always opens your team (sneak to place it as a decoration).
+
+**New in 1.15:** hold right mouse to look around during battles, and the minimap no longer covers the opponent's health.

@@ -337,16 +337,16 @@ public static class Installer
         File.WriteAllText(file, text, Utf8NoBom);
     }
 
-    // The team list sits in the top left, so the minimap goes in the top right.
+    // The team list sits in the top left, so the minimap goes in the top right, below where the battle screen shows the opponent's health.
     static void MoveMinimap()
     {
         const string module = "module;id=xaerominimap:minimap;";
         var file = Path.Combine(GameDir, "config", "xaerohud.txt");
         var text = File.Exists(file) ? File.ReadAllText(file) : "";
         if (text.Contains(module))
-            text = string.Join("\n", text.Split('\n').Select(line => line.StartsWith(module) ? line.Replace("fromRight=false", "fromRight=true") : line));
+            text = string.Join("\n", text.Split('\n').Select(line => line.StartsWith(module) ? line.Replace("fromRight=false", "fromRight=true").Replace(";y=0;", ";y=52;") : line));
         else
-            text += module + "x=0;y=0;centered=false;fromRight=true;fromBottom=false;flippedVer=false;flippedHor=false;\n";
+            text += module + "x=0;y=52;centered=false;fromRight=true;fromBottom=false;flippedVer=false;flippedHor=false;\n";
         Directory.CreateDirectory(Path.GetDirectoryName(file));
         File.WriteAllText(file, text, Utf8NoBom);
     }
