@@ -30,6 +30,16 @@
   "page": "https://modrinth.com/mod/athena-ctm"
  },
  {
+  "name": "Cloth Config API",
+  "version": "15.0.140+fabric",
+  "file": "cloth-config-15.0.140-fabric.jar",
+  "url": "https://cdn.modrinth.com/data/9s6osm5g/versions/HpMb5wGb/cloth-config-15.0.140-fabric.jar",
+  "sha512": "1B3F5DB4FC1D481704053DB9837D530919374BF7518D7CEDE607360F0348C04FC6347A3A72CCFEF355559E1F4AEF0B650CD58E5EE79C73B12FF0FC2746797A00",
+  "mb": 1.2,
+  "license": "LGPL-3.0-only",
+  "page": "https://modrinth.com/mod/cloth-config"
+ },
+ {
   "name": "CobbleDollars [Cobblemon Addon]",
   "version": "2.0.0+Beta-6.1",
   "file": "CobbleDollars-fabric-2.0.0+Beta-6.1+1.21.1.jar",
@@ -218,6 +228,16 @@
   "mb": 0.7,
   "license": "MIT",
   "page": "https://modrinth.com/mod/geckolib"
+ },
+ {
+  "name": "InvMove",
+  "version": "0.9.3+1.21.1-fabric",
+  "file": "InvMove-0.9.3+1.21.1-Fabric.jar",
+  "url": "https://cdn.modrinth.com/data/REfW2AEX/versions/nOwgsiRT/InvMove-0.9.3%2B1.21.1-Fabric.jar",
+  "sha512": "18B19FF3B39C82399E4FA98A20F682191C34CFCC7774D8BA8CB7941EF6C318F48B6DFDF34A743B8580BBFFF0E8073C53B3C836EA1B8BB44E379363CE805FFCE9",
+  "mb": 0.1,
+  "license": "LGPL-3.0-only",
+  "page": "https://modrinth.com/mod/invmove"
  },
  {
   "name": "Cobblemon: Mega Showdown",
