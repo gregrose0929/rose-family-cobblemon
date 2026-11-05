@@ -30,6 +30,16 @@
   "page": "https://modrinth.com/mod/athena-ctm"
  },
  {
+  "name": "Cardinal Components API",
+  "version": "6.1.3",
+  "file": "cardinal-components-api-6.1.3.jar",
+  "url": "https://cdn.modrinth.com/data/K01OU20C/versions/nLsCe2VD/cardinal-components-api-6.1.3.jar",
+  "sha512": "DB52FC8C4F14DDA723B69EEC5A52A693FCB1DB72E97114CB530AC8A306D95C13A4234EA54BC6E632134038CB05BA551B5240B9187562FB775A4C7BACB681EFF1",
+  "mb": 0.2,
+  "license": "MIT",
+  "page": "https://modrinth.com/mod/cardinal-components-api"
+ },
+ {
   "name": "Cloth Config API",
   "version": "15.0.140+fabric",
   "file": "cloth-config-15.0.140-fabric.jar",
@@ -60,6 +70,16 @@
   "page": "https://modrinth.com/mod/cobblefurnies"
  },
  {
+  "name": "Cobbleloots: Loot Balls and More!",
+  "version": "2.5.0-alpha.2",
+  "file": "cobbleloots-fabric-1.21.1-2.5.0-alpha.2.jar",
+  "url": "https://cdn.modrinth.com/data/kcudYghD/versions/wOb44P9k/cobbleloots-fabric-1.21.1-2.5.0-alpha.2.jar",
+  "sha512": "3B634CE7A84AC60E2D609D63E8EA7986C6717779DF4E71C60477B90B0BE4BD5509FABC208D018DB63457B99D22A20269FCEEB5AAD4CD5367EDBDB2A70412304A",
+  "mb": 0.3,
+  "license": "MIT",
+  "page": "https://modrinth.com/mod/cobbleloots"
+ },
+ {
   "name": "Cobblemon Armors",
   "version": "1.6.0+1.8.4",
   "file": "cobblemon-armors-1.6.0+1.8.4.jar",
@@ -78,6 +98,16 @@
   "mb": 140.0,
   "license": "MPL-2.0",
   "page": "https://modrinth.com/mod/cobblemon"
+ },
+ {
+  "name": "Cobblemon Mount Mastery",
+  "version": "0.4.2",
+  "file": "Cobblemon-mount-mastery-0.4.2.jar",
+  "url": "https://cdn.modrinth.com/data/THkyAcSA/versions/eDfBTRvH/Cobblemon-mount-mastery-0.4.2.jar",
+  "sha512": "EF2485CF150DBA7CC8A840FBEBB1B3CADBA115788CADD8A7DC78E3B3498836E303F06C9165F9CE7DC4C37E0D6EF10D4FCBB8F6296094AA8A07C81FDAA4749859",
+  "mb": 0.6,
+  "license": "MIT",
+  "page": "https://modrinth.com/mod/cobblemon-mount-mastery"
  },
  {
   "name": "Cobblemon: Perfect Partners",
@@ -110,6 +140,16 @@
   "page": "https://modrinth.com/mod/cobblemon-smartphone"
  },
  {
+  "name": "Cobblemon: Extended Battle UI",
+  "version": "0.10.0",
+  "file": "cobblemonextendedbattleui-0.10.0.jar",
+  "url": "https://cdn.modrinth.com/data/ry6cHJdV/versions/MfhEFE6x/cobblemonextendedbattleui-0.10.0.jar",
+  "sha512": "F5866313BF6FAF5428B82FB7956EF454B89922E0795DC5B22E1995832DF2C0CC7C66C9B6BF22247818498B425E5F04E48F5BAC8113865FB7F9BD51594CDF8B2D",
+  "mb": 0.5,
+  "license": "MIT",
+  "page": "https://modrinth.com/mod/cobblemon-extended-battle-ui"
+ },
+ {
   "name": "Cobblemon Raid Dens",
   "version": "0.13.5+1.21.1",
   "file": "cobblemonraiddens-fabric-0.13.5+1.21.1.jar",
@@ -118,6 +158,16 @@
   "mb": 2.8,
   "license": "MIT",
   "page": "https://modrinth.com/mod/cobblemonraiddens"
+ },
+ {
+  "name": "Cobblemon Stone Statues",
+  "version": "1.1",
+  "file": "cobblemonstonestatues-fabric-1.1.jar",
+  "url": "https://cdn.modrinth.com/data/MTdmpNqd/versions/Tcq1kSaa/cobblemonstonestatues-fabric-1.1.jar",
+  "sha512": "C8FDEE146FD791B2CC7AB8C21DE4200BB197B97228D070C52B555764534A81B53888340493FFEFDB04374527B95B091F50AB73CF2DF60FC51DF02DAFE599A4E0",
+  "mb": 0.2,
+  "license": "LicenseRef-All-Rights-Reserved",
+  "page": "https://modrinth.com/mod/cobblemon-stone-statues"
  },
  {
   "name": "Cobblemon PokeNav",
@@ -148,6 +198,16 @@
   "mb": 0.3,
   "license": "MPL-2.0",
   "page": "https://modrinth.com/mod/cobbleworkers"
+ },
+ {
+  "name": "Cobblemon Ride Expansion",
+  "version": "0.0.5",
+  "file": "CRE-v0.0.5-Fabric.jar",
+  "url": "https://cdn.modrinth.com/data/ovZcfCSI/versions/SawuHgpJ/CRE-v0.0.5-Fabric.jar",
+  "sha512": "F5AA8753B945392A35BAC6725E6F4151D6DCF531DE3794509AFB96440E94AC4F1461D7F43CA9D68DE1941A414D79CA359127B6E3F9FC442E2627B5BFBDE93DDD",
+  "mb": 3.8,
+  "license": "LicenseRef-All-Rights-Reserved",
+  "page": "https://modrinth.com/mod/cre"
  },
  {
   "name": "Dynamic FPS",
@@ -188,6 +248,16 @@
   "mb": 8.1,
   "license": "Apache-2.0",
   "page": "https://modrinth.com/mod/fabric-language-kotlin"
+ },
+ {
+  "name": "Falling Leaves",
+  "version": "1.17.1+1.21.1",
+  "file": "fallingleaves-1.17.1+1.21.1.jar",
+  "url": "https://cdn.modrinth.com/data/WhbRG4iK/versions/Y0zS16Bk/fallingleaves-1.17.1%2B1.21.1.jar",
+  "sha512": "A2E89D23F25FC7387F68E1055325367FD8A01D4267EA5F2612EDD83B09948BD74CDC670E1397DCBCB91F2B599D46ECE4F51C076FD0C364920228DF0862F6ACAB",
+  "mb": 0.2,
+  "license": "MIT",
+  "page": "https://modrinth.com/mod/fallingleaves"
  },
  {
   "name": "Cobblemon Fight or Flight Reborn",
@@ -260,6 +330,16 @@
   "page": "https://modrinth.com/mod/owo-lib"
  },
  {
+  "name": "Particle Rain",
+  "version": "v4.0.3+1.21.1-fabric",
+  "file": "particlerain-4.0.3+1.21.1-fabric.jar",
+  "url": "https://cdn.modrinth.com/data/nrikgvxm/versions/GBivJmD5/particlerain-4.0.3%2B1.21.1-fabric.jar",
+  "sha512": "9B5934F6550055F634A60620ED5230A3CC211B3E3E86876E3B82DBAA7322F700C23DC73516E5C6893B9D45C962E0F25F285501148849B4334007ADA56C6DA544",
+  "mb": 0.6,
+  "license": "MIT",
+  "page": "https://modrinth.com/mod/particle-rain"
+ },
+ {
   "name": "Poke Clothing",
   "version": "1.21.1-1.2.2",
   "file": "poke-clothing-1.2.2.jar",
@@ -290,6 +370,26 @@
   "page": "https://modrinth.com/mod/rctmod"
  },
  {
+  "name": "Cobblemon Rustling Spots",
+  "version": "6.0",
+  "file": "rustlingspots-fabric-6.0.jar",
+  "url": "https://cdn.modrinth.com/data/JqMS1LKC/versions/phXTFqWl/rustlingspots-fabric-6.0.jar",
+  "sha512": "AC8517AD3E69D356EC8C4154CA126EE466875EC80EA507F8A1F547CF564F363EDF03502B9E01454778400646AE54E2D46542DDA9C20A70E42B089F5F86B991A9",
+  "mb": 0.8,
+  "license": "MPL-2.0",
+  "page": "https://modrinth.com/mod/cobblemon-rustling-spots"
+ },
+ {
+  "name": "Rustling Spots: Team Rocket Addon [Cobblemon]",
+  "version": "2.0",
+  "file": "rustlingspots-teamrocket-fabric-2.0.jar",
+  "url": "https://cdn.modrinth.com/data/yZJEADPI/versions/W1uG628B/rustlingspots-teamrocket-fabric-2.0.jar",
+  "sha512": "640CD61DC1FF0BC5DF939D937675C264EDA6740233EDA342E729F4F4F753D1D35B49E37D9938D1858D5C58E39BEDB681D52CC62E45D00CDF881BA3B16DFFB738",
+  "mb": 0.6,
+  "license": "LicenseRef-All-Rights-Reserved",
+  "page": "https://modrinth.com/mod/rs-teamrocket-addon"
+ },
+ {
   "name": "Sodium",
   "version": "mc1.21.1-0.8.13-fabric",
   "file": "sodium-fabric-0.8.13+mc1.21.1.jar",
@@ -298,6 +398,26 @@
   "mb": 1.6,
   "license": "LicenseRef-Polyform-Shield-1.0.0",
   "page": "https://modrinth.com/mod/sodium"
+ },
+ {
+  "name": "Sound Physics Remastered",
+  "version": "fabric-1.21.1-1.5.2",
+  "file": "sound-physics-remastered-fabric-1.21.1-1.5.2.jar",
+  "url": "https://cdn.modrinth.com/data/qyVF9oeo/versions/BYhL3BDk/sound-physics-remastered-fabric-1.21.1-1.5.2.jar",
+  "sha512": "B30CA4C5DF0E692D779C107C20719D2920021CC44EE07811F2A7C01CF190FC7433798AB35DEE10B31A312FD3F1B0F231CC29D04EBD086B82E2068A878080F236",
+  "mb": 0.2,
+  "license": "GPL-3.0-only",
+  "page": "https://modrinth.com/mod/sound-physics-remastered"
+ },
+ {
+  "name": "Traveler's Backpack",
+  "version": "1.21.1-10.1.40",
+  "file": "travelersbackpack-fabric-1.21.1-10.1.40.jar",
+  "url": "https://cdn.modrinth.com/data/rlloIFEV/versions/q2nboqiM/travelersbackpack-fabric-1.21.1-10.1.40.jar",
+  "sha512": "A9DF9A44FE6DB535FF293B547FEE7BE7C248D0B1D9CF84DA0C405B0FFF59EFF25DD7B550ACF5F0EA0C75CF7FC07FE554FC581EFCBA18C4BB306DB6AA9E68F205",
+  "mb": 1.5,
+  "license": "LGPL-3.0-only",
+  "page": "https://modrinth.com/mod/travelersbackpack"
  },
  {
   "name": "Wild Battle API",

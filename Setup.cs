@@ -115,7 +115,9 @@ public static class Installer
         AddMapWaypoints();
         MoveSummaryKey();
         MoveMinimap();
+        InstallBackpackDesigns(log, token);
         File.WriteAllBytes(Path.Combine(GameDir, "config", "cobblemon_smartphone.json"), Resource("phone-settings.json")); // The phone reads which apps to show from each PC.
+        File.WriteAllBytes(Path.Combine(GameDir, "config", "cobblemonextendedbattleui.json"), Resource("battle-info-settings.json")); // Keeps battle info from covering the screen.
         RegisterUninstaller();
         progress(1);
         log("Finished.");
@@ -334,19 +336,59 @@ public static class Installer
             text += binding + "j\n";
         text = ChangeDefaultKey(text, "key_key.companion_bonds.open_contest_tracker:key.keyboard.", "k", "i"); // K opens the phone.
         text = ChangeDefaultKey(text, "key_key.companion_bonds.pet_interaction:key.keyboard.", "unknown", "v"); // Unbound by default.
+        text = ChangeDefaultKey(text, "key_key.ridetraining.toggle_quest_hud:key.keyboard.", "j", "unknown"); // J shows Pokemon details.
+        text = ChangeDefaultKey(text, "key_key.ridetraining.move_quest_hud:key.keyboard.", "k", "unknown"); // K opens the phone.
         File.WriteAllText(file, text, Utf8NoBom);
     }
 
-    // The team list sits in the top left, so the minimap goes in the top right, below where the battle screen shows the opponent's health.
+    // These designs are downloaded from their own page and turned on for the player.
+    const string BackpackDesignsFile = "TB Textures Cobblemon-fabric-1.5.zip";
+    const string BackpackDesignsUrl = "https://cdn.modrinth.com/data/YvzBlCGS/versions/gokAEeae/TB%20Textures%20Cobblemon-fabric-1.5.zip";
+    const string BackpackDesignsSha512 = "406E0C80842C19F6106DAA5E00E6106872FEA423A9EE40081E4FB7B1F6ACB74A39E909CC1BAEFD1E09C079061B660266D3A6FED71B12CC6E3D8959487EAC7971";
+
+    static void InstallBackpackDesigns(Action<string> log, CancellationToken token)
+    {
+        var folder = Path.Combine(GameDir, "resourcepacks");
+        Directory.CreateDirectory(folder);
+        var target = Path.Combine(folder, BackpackDesignsFile);
+        if (!File.Exists(target) || Sha512(target) != BackpackDesignsSha512)
+        {
+            log("Downloading backpack designs");
+            var temp = target + ".download";
+            try
+            {
+                Download(BackpackDesignsUrl, temp, token, bytes => { });
+                if (Sha512(temp) != BackpackDesignsSha512)
+                    throw new InvalidDataException("The backpack designs failed their safety check.");
+                Replace(temp, target);
+            }
+            finally
+            {
+                if (File.Exists(temp))
+                    File.Delete(temp);
+            }
+        }
+        var file = Path.Combine(GameDir, "options.txt");
+        var entry = "\"file/" + BackpackDesignsFile + "\"";
+        var lines = File.ReadAllLines(file).ToList();
+        var index = lines.FindIndex(line => line.StartsWith("resourcePacks:"));
+        if (index < 0)
+            lines.Add("resourcePacks:[\"fabric\"," + entry + "]");
+        else if (!lines[index].Contains(entry))
+            lines[index] = lines[index].TrimEnd(']') + "," + entry + "]";
+        File.WriteAllLines(file, lines, Utf8NoBom);
+    }
+
+    // The team list sits in the top left, so the minimap goes in the top right. It hides itself during battles.
     static void MoveMinimap()
     {
         const string module = "module;id=xaerominimap:minimap;";
         var file = Path.Combine(GameDir, "config", "xaerohud.txt");
         var text = File.Exists(file) ? File.ReadAllText(file) : "";
         if (text.Contains(module))
-            text = string.Join("\n", text.Split('\n').Select(line => line.StartsWith(module) ? line.Replace("fromRight=false", "fromRight=true").Replace(";y=0;", ";y=52;") : line));
+            text = string.Join("\n", text.Split('\n').Select(line => line.StartsWith(module) ? line.Replace("fromRight=false", "fromRight=true").Replace(";y=52;", ";y=0;") : line));
         else
-            text += module + "x=0;y=52;centered=false;fromRight=true;fromBottom=false;flippedVer=false;flippedHor=false;\n";
+            text += module + "x=0;y=0;centered=false;fromRight=true;fromBottom=false;flippedVer=false;flippedHor=false;\n";
         Directory.CreateDirectory(Path.GetDirectoryName(file));
         File.WriteAllText(file, text, Utf8NoBom);
     }

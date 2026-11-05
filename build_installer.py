@@ -22,6 +22,8 @@ CLIENT_MODS = (
     "CobbleDollars", "xaeroworldmap", "xaerominimap", "CobbleverseBadges", "cobblemon_smartphone",
     "fabric-language-kotlin", "sodium-fabric", "entityculling", "dynamic-fps",
     "cobbleworkers", "cobblemon-armors", "poke-clothing", "cobblemon-perfect-partners", "cobblenav", "InvMove", "cloth-config",
+    "cobblemonextendedbattleui", "travelersbackpack", "cardinal-components", "particlerain", "fallingleaves", "sound-physics", "Cobblemon-mount-mastery", "CRE-",
+    "rustlingspots", "cobbleloots", "cobblemonstonestatues",
 )
 SERVER_ONLY = ("flan", "essential", "luckperms", "lithium", "ferritecore", "servercore", "spark", "daycareplus", "polymer", "pokedex", "Radical Gyms",
                "matthiesen", "spawnnotification", "timcore", "cobblemon-boosters", "cobblemon-npc-extensions", "SafePastures")
@@ -79,6 +81,7 @@ subprocess.run([
     f"/resource:{os.path.join(dist, 'servers.dat')},servers.dat",
     f"/resource:{icons},rose-family-icons.jar",
     f"/resource:{os.path.join(HERE, 'phone-settings.json')},phone-settings.json",
+    f"/resource:{os.path.join(HERE, 'battle-info-settings.json')},battle-info-settings.json",
     os.path.join(HERE, "Setup.cs"), os.path.join(dist, "Version.cs"),
 ], check=True)
 
