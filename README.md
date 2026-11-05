@@ -80,3 +80,5 @@ No mods are stored in this repository. They belong to their authors, and each on
 **New in 1.15:** hold right mouse to look around during battles, and the minimap no longer covers the opponent's health.
 
 **New in 1.16:** the minimap hides during battles, battles show more detail when you hover over a move, Pokemon backpacks are in the Shop, and there are ride upgrades, Rustling Spots, loot balls, statues, and weather and sound effects.
+
+**New in 1.17:** Pallet Town and Lavender Town are on the map, and a Camera app lets you choose how battles are filmed.

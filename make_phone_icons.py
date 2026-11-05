@@ -251,6 +251,20 @@ def minimap(put, rect):
     rect(23, 12, 25, 14, RED)
 
 
+def camera(put, rect):
+    # A camera.
+    rect(7, 13, 28, 27, (235, 235, 240, 255))
+    rect(12, 9, 19, 12, (235, 235, 240, 255))
+    for y in range(36):
+        for x in range(36):
+            d = math.hypot(x - 17.5, y - 20)
+            if d <= 5:
+                put(x, y, DARK)
+            if d <= 2.5:
+                put(x, y, (90, 150, 220, 255))
+    rect(24, 15, 26, 16, RED)
+
+
 def gift(put, rect):
     # A wrapped present.
     box, ribbon = (240, 240, 240, 255), (235, 70, 70, 255)
@@ -264,20 +278,22 @@ def gift(put, rect):
 
 ICONS = {"travel": ("Travel", (40, 140, 140, 255), travel), "gift": ("Gift", (170, 60, 130, 255), gift), "hunts": ("Hunts", (205, 110, 30, 255), hunts), 
          "dex": ("Family", (50, 130, 80, 255), dex), "today": ("Today", (60, 130, 190, 255), today), "cup": ("Cup", (150, 40, 60, 255), cup), "home": ("Home", (70, 120, 140, 255), go_home),
-         "minimap": ("Minimap", (70, 90, 80, 255), minimap), "guide": ("Guide", (120, 70, 170, 255), guide)}
+         "camera": ("Camera", (90, 80, 150, 255), camera), "minimap": ("Minimap", (70, 90, 80, 255), minimap), "guide": ("Guide", (120, 70, 170, 255), guide)}
 # Long names for when you hover over an app.
 NAMES = {"travel": "Travel: fly to any city or gym", "gift": "Daily Gift", "hunts": "Hunts: catching missions", "dex": "Family Pok\u00e9dex", "today": "Today: time and weather",
-         "cup": "Rose Cup", "home": "Home: go home, set home, or go back", "minimap": "Minimap: on or off", "guide": "Trainer's Guide", "pc": "PC: change your team", "cloud": "Item Bag (your Ender Chest)", "cobbledollars_shop": "Shop: buy and sell",
+         "cup": "Rose Cup", "home": "Home: go home, set home, or go back", "camera": "Camera: how battles are filmed", "minimap": "Minimap: on or off", "guide": "Trainer's Guide", "pc": "PC: change your team", "cloud": "Item Bag (your Ender Chest)", "cobbledollars_shop": "Shop: buy and sell",
          "rct_trainer_card": "Trainer Card", "pokedex": "Pok\u00e9dex", "pokeinfo": "Pok\u00e9mon Info", "cobblenav_pokenav": "PokeNav: who lives nearby", "crafting": "Crafting Table", "social": "Messages"}
 # The phone's own icons get names too.
 NATIVE_LABELS = {"pc": "PC", "cloud": "Bag", "cobbledollars": "Shop", "pokedex": "Pokedex", "pokeinfo": "Info", "pokenav": "PokeNav", "crafting": "Craft", "social": "Message", "trainer": "Card", "trainer_card": "Card", "rct_trainer_card": "Card", "rct": "Card", "trainercard": "Card", "fishnav": "FishNav"}
-MOD = {"schemaVersion": 1, "id": "rose_family_icons", "version": "1.8.0", "name": "Rose Family Icons", "description": "Icons for the Rose Family Server's phone apps, plus wording for server-only mods.", "environment": "*", "entrypoints": {"main": ["rose.fixes.RoseFixes"], "client": ["rose.fixes.RoseClient"]}, "depends": {"minecraft": "~1.21.1"}, "license": "MIT"}
+MOD = {"schemaVersion": 1, "id": "rose_family_icons", "version": "1.10.0", "name": "Rose Family Icons", "description": "Icons for the Rose Family Server's phone apps, plus wording for server-only mods.", "environment": "*", "entrypoints": {"main": ["rose.fixes.RoseFixes"], "client": ["rose.fixes.RoseClient"]}, "mixins": [{"config": "rose_fixes.mixins.json", "environment": "client"}], "depends": {"minecraft": "~1.21.1"}, "license": "MIT"}
 with zipfile.ZipFile(sys.argv[1], "w", zipfile.ZIP_DEFLATED) as jar:
     jar.writestr("fabric.mod.json", json.dumps(MOD))
-    classes = os.path.join(os.path.dirname(os.path.abspath(__file__)), "rose_fixes", "rose", "fixes")
-    for name in sorted(os.listdir(classes)):
-        with open(os.path.join(classes, name), "rb") as handle:
-            jar.writestr(f"rose/fixes/{name}", handle.read())
+    classes = os.path.join(os.path.dirname(os.path.abspath(__file__)), "rose_fixes")
+    for folder, _, files in os.walk(os.path.join(classes, "rose")):
+        for name in sorted(files):
+            with open(os.path.join(folder, name), "rb") as handle:
+                jar.writestr(os.path.relpath(os.path.join(folder, name), classes).replace(os.sep, "/"), handle.read())
+    jar.writestr("rose_fixes.mixins.json", json.dumps({"required": True, "minVersion": "0.8", "package": "rose.fixes.mixin", "compatibilityLevel": "JAVA_21", "client": ["CameraMixin"], "injectors": {"defaultRequire": 1}}))
     for name, (label, background, draw) in ICONS.items():
         jar.writestr(f"assets/rose_family/textures/gui/buttons/{name}.png", icon(background, draw, False, label))
         jar.writestr(f"assets/rose_family/textures/gui/buttons/{name}_hover.png", icon(background, draw, True, label))

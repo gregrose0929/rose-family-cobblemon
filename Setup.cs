@@ -44,6 +44,8 @@ public static class Installer
     static readonly object[][] Places =
     {
         new object[] { "Rose Town", "R", 324, 65, -178, 12, "dim%0" },
+        new object[] { "Pallet Town", "P", -225, 65, -910, 12, "dim%0" },
+        new object[] { "Lavender Town", "L", 320, 69, -1310, 13, "dim%0" },
         new object[] { "Old Spawn", "O", 0, 75, 0, 2, "dim%0" },
         new object[] { "Cerulean City", "C", 624, 63, 128, 9, "dim%0" },
         new object[] { "Vermilion City", "V", 576, 64, -480, 9, "dim%0" },

@@ -266,5 +266,123 @@ def lily():
     return f
 
 
+def plain(key, skin, hair, eye, top, pants, shoes, extra=None, sleeve=None, glasses=None, kid=False):
+    """A townsperson with a simple outfit, plus any extra pieces."""
+    f = Figure(key, kid=kid)
+    if kid:
+        f.cube("head", [-4, 14, -4], [8, 8, 8], face_painter(skin, hair, eye, glasses=glasses), 0.01)
+        f.cube("torso", [-3, 7, -1.5], [6, 7, 3], solid(top))
+        f.cube("arm_right", [-5, 7.5, -1], [2, 6, 2], limb(sleeve or top, 2, skin))
+        f.cube("arm_left", [3, 7.5, -1], [2, 6, 2], limb(sleeve or top, 2, skin))
+        legs = leg(pants, shoes, shoe_rows=2)
+        f.cube("leg_right", [-3, 0, -1.5], [3, 7, 3], legs)
+        f.cube("leg_left", [0, 0, -1.5], [3, 7, 3], legs)
+    else:
+        base_adult(f, face_painter(skin, hair, eye, glasses=glasses), top if callable(top) else solid(top), limb(sleeve or (top if not callable(top) else pants), 2, skin), leg(pants, shoes))
+    if extra:
+        extra(f)
+    return f
+
+
+def oak():
+    coat, shirt = (240, 241, 245, 255), (160, 60, 55, 255)
+
+    def torso(face, x, y, w, h):
+        if face == "front" and x in (3, 4):
+            return shirt
+        if face == "front" and x in (2, 5) and y < 6:
+            return shade(coat, 0.8)
+        return coat
+
+    def tails(f):
+        f.cube("torso", [-4.5, 5, -2.5], [9, 7, 5], lambda face, x, y, w, h: None if face in ("top", "bottom") or (face == "front" and 3 <= x <= 5) else shade(coat, 0.96))
+
+    return plain("oak", (226, 182, 150, 255), (205, 205, 205, 255), (60, 50, 40, 255), torso, (135, 110, 80, 255), (70, 50, 35, 255), tails, sleeve=coat)
+
+
+def mom():
+    def apron(face, x, y, w, h):
+        if face == "front" and 1 <= x <= 6 and y >= 3:
+            return (250, 245, 235, 255)
+        return (225, 110, 130, 255)
+
+    def hair(f):
+        f.cube("head", [-4, 22, 3.5], [8, 7, 1], lambda face, x, y, w, h: (110, 60, 35, 255))
+
+    return plain("mom", (240, 200, 170, 255), (110, 60, 35, 255), (70, 90, 60, 255), apron, (70, 90, 150, 255), (200, 200, 200, 255), hair, sleeve=(225, 110, 130, 255))
+
+
+def aide():
+    coat = (235, 240, 240, 255)
+
+    def torso(face, x, y, w, h):
+        return (70, 120, 90, 255) if face == "front" and x in (3, 4) else coat
+
+    return plain("aide", (190, 140, 105, 255), (40, 30, 30, 255), (40, 30, 30, 255), torso, (60, 70, 80, 255), (40, 40, 45, 255), sleeve=coat, glasses=(95, 95, 110, 255))
+
+
+def boy():
+    def cap(f):
+        red = (205, 50, 50, 255)
+        f.cube("head", [-4.5, 19.5, -4.5], [9, 3, 9], solid(red))
+        f.cube("head", [-4, 19.5, -8], [8, 1, 4], solid(shade(red, 0.85)))
+
+    return plain("boy", (240, 200, 170, 255), (70, 45, 30, 255), (60, 80, 120, 255), (70, 120, 200, 255), (60, 70, 110, 255), (205, 50, 50, 255), cap, kid=True)
+
+
+def fisher():
+    hat, vest = (70, 110, 80, 255), (112, 112, 72, 255)
+
+    def gear(f):
+        f.cube("head", [-4.5, 31, -4.5], [9, 2, 9], solid(hat))
+        f.cube("head", [-6, 30.5, -6], [12, 1, 12], solid(shade(hat, 0.9)))
+        f.cube("arm_right", [-6.5, 11, -3.5], [1, 26, 1], lambda face, x, y, w, h: (120, 85, 55, 255))
+
+    return plain("fisher", (195, 150, 115, 255), (50, 35, 25, 255), (40, 40, 45, 255), vest, (60, 80, 120, 255), (60, 95, 70, 255), gear, sleeve=(190, 180, 150, 255))
+
+
+def fuji():
+    robe = (150, 135, 170, 255)
+
+    def beard(f):
+        f.cube("head", [-3.5, 23, -4.6], [7, 3, 1], lambda face, x, y, w, h: None if face in ("top", "back") else (225, 225, 225, 255))
+        f.cube("torso", [-4.5, 3, -2.5], [9, 9, 5], lambda face, x, y, w, h: None if face in ("top", "bottom") else shade(robe, 0.96))
+
+    return plain("fuji", (220, 180, 150, 255), (225, 225, 225, 255), (50, 45, 50, 255), robe, robe, (60, 50, 60, 255), beard)
+
+
+def channeler():
+    robe = (85, 55, 110, 255)
+
+    def hood(f):
+        f.cube("head", [-4.5, 25, -4.5], [9, 8, 9], lambda face, x, y, w, h: None if face == "front" and 1 <= x <= 7 and y >= 2 else robe)
+        f.cube("torso", [-4.5, 1, -2.5], [9, 11, 5], lambda face, x, y, w, h: None if face in ("top", "bottom") else shade(robe, 0.94 if x % 2 else 1.0))
+
+    return plain("channeler", (225, 210, 200, 255), (40, 30, 45, 255), (60, 40, 80, 255), robe, robe, (40, 30, 45, 255), hood)
+
+
+def lavgirl():
+    dress = (170, 130, 210, 255)
+
+    def skirt(f):
+        f.cube("torso", [-3.5, 3, -2], [7, 5, 4], lambda face, x, y, w, h: None if face in ("top", "bottom") else shade(dress, 1.0 if x % 2 else 0.9))
+        for side in (-5, 3):
+            f.cube("head", [side, 14, -1], [2, 5, 2], solid((60, 40, 30, 255)))
+
+    return plain("lavgirl", (240, 205, 180, 255), (60, 40, 30, 255), (80, 60, 110, 255), dress, (240, 205, 180, 255), (120, 80, 150, 255), skirt, kid=True)
+
+
+def rater():
+    suit = (60, 65, 95, 255)
+
+    def torso(face, x, y, w, h):
+        if face == "front" and x in (3, 4):
+            return (215, 180, 60, 255) if y > 0 else (240, 240, 240, 255)
+        return suit
+
+    return plain("rater", (225, 185, 155, 255), (90, 90, 95, 255), (40, 40, 50, 255), torso, suit, (35, 30, 30, 255), sleeve=suit, glasses=(50, 50, 60, 255))
+
+
 def build():
-    return {figure.key: (figure.geo(), figure.pixels) for figure in (professor(), angler(), ranger(), lily())}
+    figures = (professor(), angler(), ranger(), lily(), oak(), mom(), aide(), boy(), fisher(), fuji(), channeler(), lavgirl(), rater())
+    return {figure.key: (figure.geo(), figure.pixels) for figure in figures}
