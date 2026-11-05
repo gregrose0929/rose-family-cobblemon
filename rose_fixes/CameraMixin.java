@@ -26,7 +26,7 @@ public abstract class CameraMixin {
     @Inject(method = "method_19321", at = @At("TAIL"))
     private void rose$battleCamera(class_1922 area, class_1297 entity, boolean thirdPerson, boolean inverse, float delta, CallbackInfo info) {
         if (RoseClient.placeCamera) {
-            field_18719 = true;
+            field_18719 = RoseClient.showBody;
             method_19325(RoseClient.cameraYaw, RoseClient.cameraPitch);
             method_19322(new class_243(RoseClient.cameraX, RoseClient.cameraY, RoseClient.cameraZ));
         }

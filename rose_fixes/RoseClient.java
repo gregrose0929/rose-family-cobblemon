@@ -4,7 +4,12 @@ import com.cobblemon.mod.common.client.CobblemonClient;
 import com.cobblemon.mod.common.entity.pokemon.PokemonEntity;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import com.cobblemon.mod.common.client.battle.ClientBattle;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Deque;
+import java.util.UUID;
+import kotlin.Unit;
 import java.util.List;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.message.v1.ClientReceiveMessageEvents;
@@ -25,14 +30,23 @@ import xaero.common.minimap.MinimapProcessor;
 public class RoseClient implements ClientModInitializer {
     private static final int RIGHT_BUTTON = 1;
     private static final String CAMERA_MESSAGE = "rose-battle-camera:";
-    private static final int SIDE = 0, BEHIND = 1, OVERHEAD = 2, FIRST_PERSON = 3, FREE = 4;
+    private static final int SIDE = 0, BEHIND = 1, OVERHEAD = 2, FIRST_PERSON = 3, FREE = 4, GAME = 5;
+    private static final long SHOT_MILLIS = 2200, INTRO_MILLIS = 2600;
 
     /** Read by the camera each frame. */
     public static boolean placeCamera;
+    public static boolean showBody = true;
     public static double cameraX, cameraY, cameraZ;
     public static float cameraYaw, cameraPitch;
 
-    private int mode = SIDE;
+    private int mode = GAME;
+    private ClientBattle listeningTo;
+    private final Deque<Boolean> moveShots = new ArrayDeque<>();
+    private long shotEnds;
+    private boolean showAlly;
+    private boolean gliding;
+    private long lastFrame;
+    private double glideX, glideY, glideZ, lookAtX, lookAtY, lookAtZ;
     private boolean looking;
     private double lastX;
     private double lastY;
@@ -52,9 +66,9 @@ public class RoseClient implements ClientModInitializer {
 
     private void loadMode() {
         try {
-            mode = Math.max(SIDE, Math.min(FREE, Integer.parseInt(Files.readString(settingsFile()).trim())));
+            mode = Math.max(SIDE, Math.min(GAME, Integer.parseInt(Files.readString(settingsFile()).trim())));
         } catch (Exception noSavedChoice) {
-            mode = SIDE;
+            mode = GAME;
         }
     }
 
@@ -62,6 +76,7 @@ public class RoseClient implements ClientModInitializer {
         mode = chosen;
         framed = false;
         aimed = false;
+        gliding = false;
         try {
             Files.writeString(settingsFile(), Integer.toString(chosen));
         } catch (Exception couldNotSave) {
@@ -90,9 +105,12 @@ public class RoseClient implements ClientModInitializer {
             framed = false;
             aimed = false;
             lookedAround = false;
+            gliding = false;
+            moveShots.clear();
         }
         inBattle = battling;
         if (battling) {
+            listenForMoves();
             updateCamera(client);
         } else {
             placeCamera = false;
@@ -103,6 +121,7 @@ public class RoseClient implements ClientModInitializer {
 
     private void updateCamera(class_310 client) {
         placeCamera = false;
+        showBody = true;
         if (client.field_1724 == null || client.field_1687 == null) {
             return;
         }
@@ -147,6 +166,10 @@ public class RoseClient implements ClientModInitializer {
             midY += (y - midY) * 0.05;
             midZ += (z - midZ) * 0.05;
         }
+        if (mode == GAME) {
+            gameCamera(client, fighters);
+            return;
+        }
         if (!framed || mode == FREE) {
             return;
         }
@@ -183,6 +206,150 @@ public class RoseClient implements ClientModInitializer {
         placeCamera = true;
     }
 
+    /** Listens for "X used Y" so the camera can go to whoever is moving, as Sword and Shield's cameras do. */
+    private void listenForMoves() {
+        ClientBattle battle = CobblemonClient.INSTANCE.getBattle();
+        if (battle == null || battle == listeningTo) {
+            return;
+        }
+        listeningTo = battle;
+        battle.getMessages().subscribe(line -> {
+            StringBuilder text = new StringBuilder();
+            line.accept((index, style, codePoint) -> {
+                text.appendCodePoint(codePoint);
+                return true;
+            });
+            String words = text.toString();
+            class_310 client = class_310.method_1551();
+            if (words.contains(" used ") && client.field_1724 != null) {
+                moveShots.add(words.startsWith(client.field_1724.method_5477().getString() + "'s"));
+            }
+            return Unit.INSTANCE;
+        });
+    }
+
+    /** Sits behind your Pokemon while you choose and orbits around it, as in Scarlet and Violet. Moves get a shot of whoever is attacking. */
+    private void gameCamera(class_310 client, List<PokemonEntity> fighters) {
+        UUID me = client.field_1724.method_5667();
+        PokemonEntity ally = null;
+        for (PokemonEntity fighter : fighters) {
+            if (me.equals(fighter.method_6139()) && (ally == null || client.field_1724.method_5858(fighter) < client.field_1724.method_5858(ally))) {
+                ally = fighter;
+            }
+        }
+        if (ally == null) {
+            // Ownership hasn't reached this PC yet, so the nearest fighter is the best guess.
+            for (PokemonEntity fighter : fighters) {
+                if (ally == null || client.field_1724.method_5858(fighter) < client.field_1724.method_5858(ally)) {
+                    ally = fighter;
+                }
+            }
+        }
+        PokemonEntity foe = null;
+        if (ally != null) {
+            for (PokemonEntity fighter : fighters) {
+                if (fighter != ally && !me.equals(fighter.method_6139()) && (foe == null || ally.method_5858(fighter) < ally.method_5858(foe))) {
+                    foe = fighter;
+                }
+            }
+        }
+        if (ally == null || foe == null || !framed) {
+            return;
+        }
+        long now = System.currentTimeMillis();
+        if (!gliding) {
+            showAlly = false;
+            shotEnds = now + INTRO_MILLIS;
+        } else if (now >= shotEnds && !moveShots.isEmpty()) {
+            showAlly = moveShots.poll();
+            shotEnds = now + SHOT_MILLIS;
+        }
+        double ax = ally.method_23317(), ay = ally.method_23318(), az = ally.method_23321();
+        double fx = foe.method_23317(), fy = foe.method_23318(), fz = foe.method_23321();
+        double gap = Math.max(0.5, Math.sqrt((fx - ax) * (fx - ax) + (fz - az) * (fz - az)));
+        double dirX = (fx - ax) / gap, dirZ = (fz - az) / gap;
+        double rightX = -dirZ, rightZ = dirX;
+        double allyHeight = ally.method_17682(), foeHeight = foe.method_17682();
+        double centerX, centerY, centerZ, offsetX, offsetY, offsetZ, lookX, lookY, lookZ;
+        if (now < shotEnds) {
+            // Facing whoever is moving, from the side they're attacking toward.
+            boolean toward = showAlly;
+            PokemonEntity star = toward ? ally : foe;
+            double height = star.method_17682();
+            double sign = toward ? 1 : -1;
+            centerX = star.method_23317();
+            centerY = star.method_23318();
+            centerZ = star.method_23321();
+            double near = 2.6 + height * 1.2;
+            offsetX = dirX * sign * near + rightX * sign * 1.8;
+            offsetY = 0.7 + height * 0.5;
+            offsetZ = dirZ * sign * near + rightZ * sign * 1.8;
+            lookX = 0;
+            lookY = height * 0.55;
+            lookZ = 0;
+        } else {
+            // The classic view: behind and beside your Pokemon, looking across at the opponent.
+            centerX = ax;
+            centerY = ay;
+            centerZ = az;
+            double back = 3.2 + allyHeight * 1.4;
+            double side = 1.3 + allyHeight * 0.4;
+            offsetX = -dirX * back + rightX * side;
+            offsetY = 1.6 + allyHeight * 0.8;
+            offsetZ = -dirZ * back + rightZ * side;
+            lookX = dirX * gap * 0.55;
+            lookY = ((fy - ay) + foeHeight * 0.5 + allyHeight * 0.4) / 2;
+            lookZ = dirZ * gap * 0.55;
+            // Right mouse orbits around your own Pokemon.
+            double turn = Math.toRadians(class_3532.method_15393(client.field_1724.method_36454() - startYaw));
+            double cos = Math.cos(turn), sin = Math.sin(turn);
+            double spunX = offsetX * cos - offsetZ * sin, spunZ = offsetX * sin + offsetZ * cos;
+            offsetX = spunX;
+            offsetZ = spunZ;
+            spunX = lookX * cos - lookZ * sin;
+            spunZ = lookX * sin + lookZ * cos;
+            lookX = spunX;
+            lookZ = spunZ;
+        }
+        double reach = 1.0;
+        for (double step = 0.1; step <= 1.0; step += 0.05) {
+            class_2338 at = class_2338.method_49638(new class_243(centerX + offsetX * step, centerY + 0.5 + (offsetY - 0.5) * step, centerZ + offsetZ * step));
+            if (!client.field_1687.method_8320(at).method_26220(client.field_1687, at).method_1110()) {
+                reach = Math.max(0.2, step - 0.1);
+                break;
+            }
+        }
+        double goalX = centerX + offsetX * reach, goalY = centerY + 0.5 + (offsetY - 0.5) * reach, goalZ = centerZ + offsetZ * reach;
+        double aimX = centerX + lookX, aimY = centerY + lookY, aimZ = centerZ + lookZ;
+        if (!gliding) {
+            glideX = goalX;
+            glideY = goalY;
+            glideZ = goalZ;
+            lookAtX = aimX;
+            lookAtY = aimY;
+            lookAtZ = aimZ;
+            lastFrame = now;
+            gliding = true;
+        }
+        double blend = 1 - Math.exp(-Math.min(now - lastFrame, 100) * 0.0035);
+        lastFrame = now;
+        glideX += (goalX - glideX) * blend;
+        glideY += (goalY - glideY) * blend;
+        glideZ += (goalZ - glideZ) * blend;
+        lookAtX += (aimX - lookAtX) * blend;
+        lookAtY += (aimY - lookAtY) * blend;
+        lookAtZ += (aimZ - lookAtZ) * blend;
+        cameraX = glideX;
+        cameraY = glideY;
+        cameraZ = glideZ;
+        double toX = lookAtX - glideX, toZ = lookAtZ - glideZ;
+        cameraYaw = (float) Math.toDegrees(Math.atan2(toZ, toX)) - 90f;
+        cameraPitch = (float) -Math.toDegrees(Math.atan2(lookAtY - glideY, Math.sqrt(toX * toX + toZ * toZ)));
+        // Up close, your own back would fill the shot.
+        showBody = client.field_1724.method_5649(glideX, glideY, glideZ) > 16;
+        placeCamera = true;
+    }
+
     @Override
     public void onInitializeClient() {
         loadMode();
@@ -193,7 +360,7 @@ public class RoseClient implements ClientModInitializer {
                 return true;
             }
             try {
-                chooseMode(Math.max(SIDE, Math.min(FREE, Integer.parseInt(text.substring(CAMERA_MESSAGE.length()).trim()))));
+                chooseMode(Math.max(SIDE, Math.min(GAME, Integer.parseInt(text.substring(CAMERA_MESSAGE.length()).trim()))));
             } catch (NumberFormatException ignored) {
                 // Not a choice this version knows.
             }
