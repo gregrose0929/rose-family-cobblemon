@@ -84,3 +84,5 @@ No mods are stored in this repository. They belong to their authors, and each on
 **New in 1.17:** Pallet Town and Lavender Town are on the map, and a Camera app lets you choose how battles are filmed.
 
 **New in 1.18:** a Game Style battle camera, now the default, and people and Mart Clerks in all eight Kanto cities.
+
+**New in 1.19:** the Kanto Story. Tap Story on your phone for your next goal, across three chapters.

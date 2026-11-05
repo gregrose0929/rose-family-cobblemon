@@ -251,6 +251,20 @@ def minimap(put, rect):
     rect(23, 12, 25, 14, RED)
 
 
+def story(put, rect):
+    # A book with a star on the cover.
+    rect(9, 8, 26, 28, (150, 90, 50, 255))
+    rect(11, 9, 26, 27, (235, 225, 195, 255))
+    rect(9, 8, 10, 28, (110, 65, 35, 255))
+    star = (255, 205, 60, 255)
+    for x, y in ((18, 12), (17, 13), (18, 13), (19, 13), (14, 15), (15, 15), (16, 15), (17, 15), (18, 15), (19, 15), (20, 15), (21, 15), (22, 15),
+                 (15, 16), (16, 16), (17, 16), (18, 16), (19, 16), (20, 16), (21, 16), (16, 17), (17, 17), (18, 17), (19, 17), (20, 17),
+                 (16, 18), (17, 18), (19, 18), (20, 18), (15, 19), (16, 19), (20, 19), (21, 19)):
+        put(x, y, star)
+    rect(13, 22, 23, 22, (150, 90, 50, 255))
+    rect(13, 24, 21, 24, (150, 90, 50, 255))
+
+
 def camera(put, rect):
     # A camera.
     rect(7, 13, 28, 27, (235, 235, 240, 255))
@@ -278,14 +292,14 @@ def gift(put, rect):
 
 ICONS = {"travel": ("Travel", (40, 140, 140, 255), travel), "gift": ("Gift", (170, 60, 130, 255), gift), "hunts": ("Hunts", (205, 110, 30, 255), hunts), 
          "dex": ("Family", (50, 130, 80, 255), dex), "today": ("Today", (60, 130, 190, 255), today), "cup": ("Cup", (150, 40, 60, 255), cup), "home": ("Home", (70, 120, 140, 255), go_home),
-         "camera": ("Camera", (90, 80, 150, 255), camera), "minimap": ("Minimap", (70, 90, 80, 255), minimap), "guide": ("Guide", (120, 70, 170, 255), guide)}
+         "story": ("Story", (60, 120, 70, 255), story), "camera": ("Camera", (90, 80, 150, 255), camera), "minimap": ("Minimap", (70, 90, 80, 255), minimap), "guide": ("Guide", (120, 70, 170, 255), guide)}
 # Long names for when you hover over an app.
 NAMES = {"travel": "Travel: fly to any city or gym", "gift": "Daily Gift", "hunts": "Hunts: catching missions", "dex": "Family Pok\u00e9dex", "today": "Today: time and weather",
-         "cup": "Rose Cup", "home": "Home: go home, set home, or go back", "camera": "Camera: how battles are filmed", "minimap": "Minimap: on or off", "guide": "Trainer's Guide", "pc": "PC: change your team", "cloud": "Item Bag (your Ender Chest)", "cobbledollars_shop": "Shop: buy and sell",
+         "cup": "Rose Cup", "home": "Home: go home, set home, or go back", "story": "Story: your next goal", "camera": "Camera: how battles are filmed", "minimap": "Minimap: on or off", "guide": "Trainer's Guide", "pc": "PC: change your team", "cloud": "Item Bag (your Ender Chest)", "cobbledollars_shop": "Shop: buy and sell",
          "rct_trainer_card": "Trainer Card", "pokedex": "Pok\u00e9dex", "pokeinfo": "Pok\u00e9mon Info", "cobblenav_pokenav": "PokeNav: who lives nearby", "crafting": "Crafting Table", "social": "Messages"}
 # The phone's own icons get names too.
 NATIVE_LABELS = {"pc": "PC", "cloud": "Bag", "cobbledollars": "Shop", "pokedex": "Pokedex", "pokeinfo": "Info", "pokenav": "PokeNav", "crafting": "Craft", "social": "Message", "trainer": "Card", "trainer_card": "Card", "rct_trainer_card": "Card", "rct": "Card", "trainercard": "Card", "fishnav": "FishNav"}
-MOD = {"schemaVersion": 1, "id": "rose_family_icons", "version": "1.11.0", "name": "Rose Family Icons", "description": "Icons for the Rose Family Server's phone apps, plus wording for server-only mods.", "environment": "*", "entrypoints": {"main": ["rose.fixes.RoseFixes"], "client": ["rose.fixes.RoseClient"]}, "mixins": [{"config": "rose_fixes.mixins.json", "environment": "client"}], "depends": {"minecraft": "~1.21.1"}, "license": "MIT"}
+MOD = {"schemaVersion": 1, "id": "rose_family_icons", "version": "1.12.0", "name": "Rose Family Icons", "description": "Icons for the Rose Family Server's phone apps, plus wording for server-only mods.", "environment": "*", "entrypoints": {"main": ["rose.fixes.RoseFixes"], "client": ["rose.fixes.RoseClient"]}, "mixins": [{"config": "rose_fixes.mixins.json", "environment": "client"}], "depends": {"minecraft": "~1.21.1"}, "license": "MIT"}
 with zipfile.ZipFile(sys.argv[1], "w", zipfile.ZIP_DEFLATED) as jar:
     jar.writestr("fabric.mod.json", json.dumps(MOD))
     classes = os.path.join(os.path.dirname(os.path.abspath(__file__)), "rose_fixes")
