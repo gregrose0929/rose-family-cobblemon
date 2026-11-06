@@ -2,6 +2,7 @@ package rose.fixes;
 
 import com.cobblemon.mod.common.client.CobblemonClient;
 import com.cobblemon.mod.common.entity.pokemon.PokemonEntity;
+import com.cobblemon.mod.common.item.PokeBallItem;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import com.cobblemon.mod.common.client.battle.ClientBattle;
@@ -123,6 +124,11 @@ public class RoseClient implements ClientModInitializer {
         placeCamera = false;
         showBody = true;
         if (client.field_1724 == null || client.field_1687 == null) {
+            return;
+        }
+        // Holding a Poke Ball means the player is aiming a throw, which needs their own eyes.
+        if (client.field_1724.method_6047().method_7909() instanceof PokeBallItem || client.field_1724.method_6079().method_7909() instanceof PokeBallItem) {
+            aimed = false;
             return;
         }
         List<PokemonEntity> fighters = new ArrayList<>();
