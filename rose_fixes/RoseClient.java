@@ -63,6 +63,8 @@ public class RoseClient implements ClientModInitializer {
     public static boolean showBody = true;
     public static double cameraX, cameraY, cameraZ;
     public static float cameraYaw, cameraPitch;
+    /** True during a battle: hearts, hunger, experience, the top bars and pop-ups are not drawn. */
+    public static boolean cleanScreen;
     /** Below 1 zooms in, for close-ups. */
     public static double fovScale = 1;
 
@@ -150,6 +152,7 @@ public class RoseClient implements ClientModInitializer {
             beginBattle(client);
         }
         inBattle = battling;
+        cleanScreen = battling;
         if (battling) {
             listenForMoves();
             updateCamera(client);
