@@ -120,6 +120,7 @@ public static class Installer
         InstallBackpackDesigns(log, token);
         File.WriteAllBytes(Path.Combine(GameDir, "config", "cobblemon_smartphone.json"), Resource("phone-settings.json")); // The phone reads which apps to show from each PC.
         File.WriteAllBytes(Path.Combine(GameDir, "config", "cobblemonextendedbattleui.json"), Resource("battle-info-settings.json")); // Keeps battle info from covering the screen.
+        File.WriteAllBytes(Path.Combine(GameDir, "config", "fightorflight_visual_effect.json5"), Resource("move-indicator-settings.json5")); // No move symbol in the corner while walking around.
         RegisterUninstaller();
         progress(1);
         log("Finished.");

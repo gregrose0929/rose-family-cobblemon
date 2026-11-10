@@ -28,8 +28,10 @@ import net.fabricmc.fabric.api.client.screen.v1.ScreenEvents;
 import net.fabricmc.fabric.api.client.screen.v1.ScreenMouseEvents;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.class_1101;
+import net.minecraft.class_1109;
 import net.minecraft.class_1113;
 import net.minecraft.class_1297;
+import net.minecraft.class_1309;
 import net.minecraft.class_2960;
 import net.minecraft.class_332;
 import net.minecraft.class_3414;
@@ -77,6 +79,15 @@ public class RoseClient implements ClientModInitializer {
     private long shotStart, shotEnd, shakeStart;
     /** Once the player's body gets in the way it stays hidden until the next cut, so it never flickers. */
     private boolean bodyHidden;
+    /** Which side of the two Pokemon this shot films from: 1 normally, -1 when a bystander blocks that side. */
+    private int shotSide = 1;
+    /** A win or a catch: its banner, and for a win in Game Style a shot of the winner that outlasts the battle. */
+    private static final long MOMENT_MILLIS = 3200;
+    private String momentTitle = "", momentName = "";
+    private long momentStart, victoryUntil;
+    private PokemonEntity winner;
+    /** Tells the battle music to fade at once, for the fanfare. */
+    private static boolean hush;
     private boolean gliding;
     private long lastFrame;
     private double glideX, glideY, glideZ, lookAtX, lookAtY, lookAtZ;
@@ -152,12 +163,17 @@ public class RoseClient implements ClientModInitializer {
             beginBattle(client);
         }
         inBattle = battling;
-        cleanScreen = battling;
+        boolean celebrating = !battling && System.currentTimeMillis() < victoryUntil && client.field_1687 != null && client.field_1724 != null
+            && winner != null && winner.method_5805() && !winner.method_31481();
+        cleanScreen = battling || celebrating;
         if (battling) {
             listenForMoves();
             updateCamera(client);
+        } else if (celebrating) {
+            victoryShot(client, winner, System.currentTimeMillis());
         } else {
             placeCamera = false;
+            winner = null;
         }
         if (!placeCamera) {
             fovScale = 1;
@@ -301,6 +317,8 @@ public class RoseClient implements ClientModInitializer {
         battleStart = System.currentTimeMillis();
         sweepStart = 0;
         sweepDone = false;
+        hush = false;
+        victoryUntil = 0;
         if (battle.isPvW()) {
             kind = WILD;
         } else {
@@ -351,8 +369,8 @@ public class RoseClient implements ClientModInitializer {
         public void method_16896() {
             if (class_310.method_1551().field_1687 == null) {
                 method_24876();
-            } else if (CobblemonClient.INSTANCE.getBattle() == null) {
-                field_5442 -= 0.02f;
+            } else if (CobblemonClient.INSTANCE.getBattle() == null || hush) {
+                field_5442 -= hush ? 0.08f : 0.02f;
                 if (field_5442 <= 0) {
                     method_24876();
                 }
@@ -369,21 +387,29 @@ public class RoseClient implements ClientModInitializer {
         placeAround(client, offsetAngle + (1 - eased) * Math.PI * 1.15, far + (modeDistance() - far) * eased, 7.5 + (modeHeight() - 7.5) * eased);
     }
 
-    /** Names the opponent across the middle of the screen as a trainer battle begins. */
+    /** Names the opponent across the middle of the screen as a trainer battle begins, and marks a win or a catch. */
     private void drawBanner(class_310 client, class_332 context) {
-        if (!inBattle || kind == WILD || bannerName.isEmpty() || client.field_1690.field_1842) {
+        if (client.field_1690.field_1842) {
             return;
         }
-        long age = System.currentTimeMillis() - battleStart;
-        long length = kind == BIG ? SWEEP_MILLIS : INTRO_MILLIS;
-        if (age > length) {
+        long now = System.currentTimeMillis();
+        if (now - momentStart < MOMENT_MILLIS) {
+            drawStrip(client, context, momentTitle, momentName, now - momentStart, MOMENT_MILLIS, true);
+        } else if (inBattle && kind != WILD && !bannerName.isEmpty()) {
+            drawStrip(client, context, bannerTitle, bannerName, now - battleStart, kind == BIG ? SWEEP_MILLIS : INTRO_MILLIS, kind == BIG);
+        }
+    }
+
+    /** A dark strip with gold edges that opens from the middle, holds a small title over a large name, then fades. */
+    private void drawStrip(class_310 client, class_332 context, String title, String name, long age, long length, boolean big) {
+        if (age < 0 || age > length) {
             return;
         }
         double opening = Math.min(1, age / 300.0);
         double shown = Math.min(opening, Math.min(1, (length - age) / 400.0));
         int alpha = (int) (shown * 255);
         int width = context.method_51421(), middle = (int) (context.method_51443() * 0.36);
-        int half = kind == BIG ? 24 : 16;
+        int half = big ? 24 : 16;
         int reach = (int) (width / 2 * opening);
         int top = middle - half, bottom = middle + half;
         context.method_25294(width / 2 - reach, top, width / 2 + reach, bottom, (int) (shown * 150) << 24);
@@ -393,13 +419,62 @@ public class RoseClient implements ClientModInitializer {
             // Text this faint would be drawn solid.
             return;
         }
-        context.method_25300(client.field_1772, bannerTitle.toUpperCase(Locale.ROOT), width / 2, top + (kind == BIG ? 5 : 4), alpha << 24 | 0xFFAA00);
-        float scale = kind == BIG ? 2.5f : 1.5f;
+        context.method_25300(client.field_1772, title.toUpperCase(Locale.ROOT), width / 2, top + (big ? 5 : 4), alpha << 24 | 0xFFAA00);
+        // Long names shrink to fit the screen.
+        float scale = Math.min(big ? 2.5f : 1.5f, (width - 24) / (float) Math.max(1, client.field_1772.method_1727(name)));
         context.method_51448().method_22903();
-        context.method_51448().method_46416(width / 2f, top + (kind == BIG ? 18 : 15), 0);
+        context.method_51448().method_46416(width / 2f, top + (big ? 18 : 15), 0);
         context.method_51448().method_22905(scale, scale, 1);
-        context.method_25300(client.field_1772, bannerName, 0, 0, alpha << 24 | 0xFFFFFF);
+        context.method_25300(client.field_1772, name, 0, 0, alpha << 24 | 0xFFFFFF);
         context.method_51448().method_22909();
+    }
+
+    /** The game says "Gotcha! Caught the Pidgey." in chat or in the battle's messages, depending on how the ball was thrown. */
+    private boolean celebrateCatch(class_310 client, String words) {
+        String start = "Gotcha! Caught the ";
+        if (!words.startsWith(start)) {
+            return false;
+        }
+        String caught = words.substring(start.length());
+        celebrate(client, "battle.catch", "Gotcha!", (caught.endsWith(".") ? caught.substring(0, caught.length() - 1) : caught) + " was caught!");
+        return true;
+    }
+
+    /** A fanfare and a banner. The battle music steps aside for it. */
+    private void celebrate(class_310 client, String sound, String title, String name) {
+        hush = true;
+        momentTitle = title;
+        momentName = name;
+        momentStart = System.currentTimeMillis();
+        client.method_1483().method_4873(class_1109.method_4758(class_3414.method_47908(class_2960.method_60655("rose_family", sound)), 1f));
+    }
+
+    /** Circles slowly in front of the winner. Works after the battle has ended too, which is when most of it plays. */
+    private void victoryShot(class_310 client, PokemonEntity winner, long now) {
+        double height = winner.method_17682();
+        double progress = 1 - Math.max(0, victoryUntil - now) / (double) MOMENT_MILLIS;
+        double facing = Math.toRadians(winner.method_36454());
+        double angle = Math.atan2(Math.cos(facing), -Math.sin(facing)) - 0.5 + progress * 0.9;
+        double distance = (2.3 + height * 1.3) * (1 - 0.1 * progress);
+        double aimX = winner.method_23317(), aimY = winner.method_23318() + height * 0.55, aimZ = winner.method_23321();
+        double goalX = aimX + Math.cos(angle) * distance, goalY = winner.method_23318() + 0.45 + height * 0.4, goalZ = aimZ + Math.sin(angle) * distance;
+        double reach = 1.0;
+        for (double step = 0.15; step <= 1.0; step += 0.05) {
+            class_2338 at = class_2338.method_49638(new class_243(aimX + (goalX - aimX) * step, aimY + (goalY - aimY) * step, aimZ + (goalZ - aimZ) * step));
+            if (!client.field_1687.method_8320(at).method_26220(client.field_1687, at).method_1110()) {
+                reach = Math.max(0.2, step - 0.1);
+                break;
+            }
+        }
+        cameraX = aimX + (goalX - aimX) * reach;
+        cameraY = aimY + (goalY - aimY) * reach;
+        cameraZ = aimZ + (goalZ - aimZ) * reach;
+        double toX = aimX - cameraX, toZ = aimZ - cameraZ;
+        cameraYaw = (float) Math.toDegrees(Math.atan2(toZ, toX)) - 90f;
+        cameraPitch = (float) -Math.toDegrees(Math.atan2(aimY - cameraY, Math.sqrt(toX * toX + toZ * toZ)));
+        fovScale = 0.8;
+        showBody = !bodyInTheWay(client, aimX, aimY, aimZ);
+        placeCamera = true;
     }
 
     /** Reads the battle's messages, so the camera can cut to whoever is attacking, hit, fainting or coming out. */
@@ -420,7 +495,16 @@ public class RoseClient implements ClientModInitializer {
             if (client.field_1724 == null) {
                 return Unit.INSTANCE;
             }
-            int mine = words.startsWith(client.field_1724.method_5477().getString() + "'s") ? 1 : 0;
+            if (celebrateCatch(client, words)) {
+                return Unit.INSTANCE;
+            }
+            String me = client.field_1724.method_5477().getString();
+            if (words.equals(me + " won!")) {
+                victoryUntil = mode == GAME ? System.currentTimeMillis() + MOMENT_MILLIS : 0;
+                celebrate(client, "battle.win", "Victory", kind == WILD || bannerName.isEmpty() ? "You won!" : "You beat " + bannerName + "!");
+                return Unit.INSTANCE;
+            }
+            int mine = words.startsWith(me + "'s") ? 1 : 0;
             if (words.contains(" used ")) {
                 shots.add(new int[] {ATTACK, mine});
                 shots.add(new int[] {REACT, 1 - mine});
@@ -454,11 +538,33 @@ public class RoseClient implements ClientModInitializer {
             return false;
         }
         double offX = toX - lineX / length * along, offY = toY - lineY / length * along, offZ = toZ - lineZ / length * along;
-        return Math.sqrt(offX * offX + offY * offY + offZ * offZ) < 1.4 + Math.max(0, along) * 0.6;
+        return Math.sqrt(offX * offX + offY * offY + offZ * offZ) < 1.4 + Math.max(0, along) * 1.1;
+    }
+
+    /** True when anyone but the player and the fighting Pokemon stands between the camera and what it would film. */
+    private boolean someoneInTheWay(class_310 client, double fromX, double fromY, double fromZ, double aimX, double aimY, double aimZ) {
+        double lineX = aimX - fromX, lineY = aimY - fromY, lineZ = aimZ - fromZ;
+        double length = Math.max(0.1, Math.sqrt(lineX * lineX + lineY * lineY + lineZ * lineZ));
+        for (class_1297 entity : client.field_1687.method_18112()) {
+            if (!(entity instanceof class_1309) || entity == client.field_1724 || (entity instanceof PokemonEntity pokemon && pokemon.isBattling())) {
+                continue;
+            }
+            double toX = entity.method_23317() - fromX, toY = entity.method_23318() + entity.method_17682() / 2 - fromY, toZ = entity.method_23321() - fromZ;
+            double along = (toX * lineX + toY * lineY + toZ * lineZ) / length;
+            if (along < -0.5 || along > length - 0.5) {
+                continue;
+            }
+            double offX = toX - lineX / length * along, offY = toY - lineY / length * along, offZ = toZ - lineZ / length * along;
+            if (Math.sqrt(offX * offX + offY * offY + offZ * offZ) < 0.7 + entity.method_17681() / 2 + Math.max(0, along) * 0.3) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private void beginShot(int kind, boolean ofAlly, long now) {
         bodyHidden = false;
+        shotSide = 1;
         shot = kind;
         shotOfAlly = ofAlly;
         shotStart = now;
@@ -501,10 +607,15 @@ public class RoseClient implements ClientModInitializer {
                 }
             }
         }
+        long now = System.currentTimeMillis();
+        if (ally != null && now < victoryUntil) {
+            winner = ally;
+            victoryShot(client, ally, now);
+            return;
+        }
         if (ally == null || foe == null || !framed) {
             return;
         }
-        long now = System.currentTimeMillis();
         boolean cut = false;
         boolean idle = shot == IDLE || shot == WIDE;
         if (!gliding && kind == WILD) {
@@ -534,7 +645,7 @@ public class RoseClient implements ClientModInitializer {
         double fx = foe.method_23317(), fy = foe.method_23318(), fz = foe.method_23321();
         double gap = Math.max(0.5, Math.sqrt((fx - ax) * (fx - ax) + (fz - az) * (fz - az)));
         double dirX = (fx - ax) / gap, dirZ = (fz - az) / gap;
-        double rightX = -dirZ, rightZ = dirX;
+        double rightX = -dirZ * shotSide, rightZ = dirX * shotSide;
         double allyHeight = ally.method_17682(), foeHeight = foe.method_17682();
         // The subject of the shot, the other Pokemon, and which way the subject faces it.
         double sx = shotOfAlly ? ax : fx, sy = shotOfAlly ? ay : fy, sz = shotOfAlly ? az : fz;
@@ -593,6 +704,16 @@ public class RoseClient implements ClientModInitializer {
             aimY = ay + ((fy - ay) + foeHeight * 0.5 + allyHeight * 0.4) / 2;
             aimZ = az + lookX * sin + lookZ * cos;
             fovScale = 0.9;
+        }
+        if (cut && someoneInTheWay(client, goalX, goalY, goalZ, aimX, aimY, aimZ)) {
+            // A townsperson or the other trainer is standing in the shot, so try it from the opposite side.
+            double across = (goalX - ax) * rightX + (goalZ - az) * rightZ;
+            double otherX = goalX - 2 * across * rightX, otherZ = goalZ - 2 * across * rightZ;
+            if (!someoneInTheWay(client, otherX, goalY, otherZ, aimX, aimY, aimZ)) {
+                goalX = otherX;
+                goalZ = otherZ;
+                shotSide = -1;
+            }
         }
         // Pull in toward what the shot is looking at rather than end up inside a wall.
         double reach = 1.0;
@@ -660,6 +781,9 @@ public class RoseClient implements ClientModInitializer {
         WorldRenderEvents.START.register(context -> clearScreenForBattle(class_310.method_1551()));
         ClientReceiveMessageEvents.ALLOW_GAME.register((message, overlay) -> {
             String text = message.getString();
+            if (celebrateCatch(class_310.method_1551(), text)) {
+                return true;
+            }
             if (!text.startsWith(CAMERA_MESSAGE)) {
                 return true;
             }

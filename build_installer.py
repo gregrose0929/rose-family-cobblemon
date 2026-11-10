@@ -82,6 +82,7 @@ subprocess.run([
     f"/resource:{icons},rose-family-icons.jar",
     f"/resource:{os.path.join(HERE, 'phone-settings.json')},phone-settings.json",
     f"/resource:{os.path.join(HERE, 'battle-info-settings.json')},battle-info-settings.json",
+    f"/resource:{os.path.join(HERE, 'move-indicator-settings.json5')},move-indicator-settings.json5",
     os.path.join(HERE, "Setup.cs"), os.path.join(dist, "Version.cs"),
 ], check=True)
 

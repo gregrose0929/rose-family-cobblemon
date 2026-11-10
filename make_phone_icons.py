@@ -299,7 +299,7 @@ NAMES = {"travel": "Travel: fly to any city or gym", "gift": "Daily Gift", "hunt
          "rct_trainer_card": "Trainer Card", "pokedex": "Pok\u00e9dex", "pokeinfo": "Pok\u00e9mon Info", "cobblenav_pokenav": "PokeNav: who lives nearby", "crafting": "Crafting Table", "social": "Messages"}
 # The phone's own icons get names too.
 NATIVE_LABELS = {"pc": "PC", "cloud": "Bag", "cobbledollars": "Shop", "pokedex": "Pokedex", "pokeinfo": "Info", "pokenav": "PokeNav", "crafting": "Craft", "social": "Message", "trainer": "Card", "trainer_card": "Card", "rct_trainer_card": "Card", "rct": "Card", "trainercard": "Card", "fishnav": "FishNav"}
-MOD = {"schemaVersion": 1, "id": "rose_family_icons", "version": "1.15.0", "name": "Rose Family Icons", "description": "Icons for the Rose Family Server's phone apps, plus wording for server-only mods.", "environment": "*", "entrypoints": {"main": ["rose.fixes.RoseFixes"], "client": ["rose.fixes.RoseClient"]}, "mixins": [{"config": "rose_fixes.mixins.json", "environment": "client"}, "rose_trainers.mixins.json"], "depends": {"minecraft": "~1.21.1"}, "license": "MIT"}
+MOD = {"schemaVersion": 1, "id": "rose_family_icons", "version": "1.16.0", "name": "Rose Family Icons", "description": "Icons for the Rose Family Server's phone apps, plus wording for server-only mods.", "environment": "*", "entrypoints": {"main": ["rose.fixes.RoseFixes"], "client": ["rose.fixes.RoseClient"]}, "mixins": [{"config": "rose_fixes.mixins.json", "environment": "client"}, "rose_trainers.mixins.json"], "depends": {"minecraft": "~1.21.1"}, "license": "MIT"}
 with zipfile.ZipFile(sys.argv[1], "w", zipfile.ZIP_DEFLATED) as jar:
     jar.writestr("fabric.mod.json", json.dumps(MOD))
     classes = os.path.join(os.path.dirname(os.path.abspath(__file__)), "rose_fixes")
@@ -321,7 +321,10 @@ with zipfile.ZipFile(sys.argv[1], "w", zipfile.ZIP_DEFLATED) as jar:
     # Battle music is the game's own, so nothing extra is downloaded: one track each for wild, trainer and gym battles.
     jar.writestr("assets/rose_family/sounds.json", json.dumps({
         f"battle.{kind}": {"sounds": [{"name": f"minecraft:records/{track}", "stream": True}]}
-        for kind, track in (("wild", "creator"), ("trainer", "pigstep"), ("gym", "otherside"))}))
+        for kind, track in (("wild", "creator"), ("trainer", "pigstep"), ("gym", "otherside"))} | {
+        # Short fanfares for a win and a catch, also the game's own.
+        "battle.win": {"sounds": [{"name": "minecraft:ui/toast/challenge_complete"}]},
+        "battle.catch": {"sounds": [{"name": "minecraft:random/levelup", "pitch": 1.15}]}}))
     # Gym leaders and other big opponents, who get the gym music and an opening camera sweep.
     with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "big_trainers.txt"), encoding="utf-8") as handle:
         jar.writestr("assets/rose_family/big_trainers.txt", handle.read())
