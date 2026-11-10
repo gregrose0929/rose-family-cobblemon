@@ -90,3 +90,5 @@ No mods are stored in this repository. They belong to their authors, and each on
 **New in 1.19.1:** holding a Poke Ball switches the battle camera to your own view so you can aim and throw.
 
 **New in 1.20.0:** a walkthrough for new players, battle music, a banner naming each trainer, and a camera sweep for gym battles. Gym leaders now battle anyone, with no level cap.
+
+**New in 1.21.0:** the Game Style battle camera now cuts between shots like the Pokemon games, and your own character no longer blocks the view.

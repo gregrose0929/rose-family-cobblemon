@@ -50,7 +50,11 @@ public class RoseClient implements ClientModInitializer {
     private static final int RIGHT_BUTTON = 1;
     private static final String CAMERA_MESSAGE = "rose-battle-camera:";
     private static final int SIDE = 0, BEHIND = 1, OVERHEAD = 2, FIRST_PERSON = 3, FREE = 4, GAME = 5;
-    private static final long SHOT_MILLIS = 2200, INTRO_MILLIS = 2600, SWEEP_MILLIS = 4200;
+    private static final long INTRO_MILLIS = 2600, SWEEP_MILLIS = 4200;
+    /** The shots Game Style cuts between, and how long each one holds. */
+    private static final int IDLE = 0, WIDE = 1, ATTACK = 2, REACT = 3, FAINT = 4, ENTER = 5;
+    private static final long[] SHOT_MILLIS = {0, 7000, 1500, 1300, 2200, 1800};
+    private static final long IDLE_BEFORE_WIDE = 9000, SHAKE_MILLIS = 380;
     private static final int WILD = 0, TRAINER = 1, BIG = 2;
     private static final String[] MUSIC = {"battle.wild", "battle.trainer", "battle.gym"};
 
@@ -59,12 +63,18 @@ public class RoseClient implements ClientModInitializer {
     public static boolean showBody = true;
     public static double cameraX, cameraY, cameraZ;
     public static float cameraYaw, cameraPitch;
+    /** Below 1 zooms in, for close-ups. */
+    public static double fovScale = 1;
 
     private int mode = GAME;
     private ClientBattle listeningTo;
-    private final Deque<Boolean> moveShots = new ArrayDeque<>();
-    private long shotEnds;
-    private boolean showAlly;
+    /** Shots waiting their turn: the kind, then 1 if it is about the player's own Pokemon. */
+    private final Deque<int[]> shots = new ArrayDeque<>();
+    private int shot = IDLE;
+    private boolean shotOfAlly, shakePending;
+    private long shotStart, shotEnd, shakeStart;
+    /** Once the player's body gets in the way it stays hidden until the next cut, so it never flickers. */
+    private boolean bodyHidden;
     private boolean gliding;
     private long lastFrame;
     private double glideX, glideY, glideZ, lookAtX, lookAtY, lookAtZ;
@@ -133,7 +143,10 @@ public class RoseClient implements ClientModInitializer {
             aimed = false;
             lookedAround = false;
             gliding = false;
-            moveShots.clear();
+            shots.clear();
+            shot = IDLE;
+            shakePending = false;
+            shakeStart = 0;
             beginBattle(client);
         }
         inBattle = battling;
@@ -143,6 +156,9 @@ public class RoseClient implements ClientModInitializer {
         } else {
             placeCamera = false;
         }
+        if (!placeCamera) {
+            fovScale = 1;
+        }
         // The first-person hand makes no sense from across the field.
         client.field_1773.method_35768(!placeCamera);
     }
@@ -150,6 +166,7 @@ public class RoseClient implements ClientModInitializer {
     private void updateCamera(class_310 client) {
         placeCamera = false;
         showBody = true;
+        fovScale = 1;
         if (client.field_1724 == null || client.field_1687 == null) {
             return;
         }
@@ -217,8 +234,8 @@ public class RoseClient implements ClientModInitializer {
             lookAtY = midY + 0.8;
             lookAtZ = midZ;
             lastFrame = now;
-            shotEnds = now;
-            showAlly = false;
+            shots.clear();
+            beginShot(IDLE, true, now);
             gliding = true;
         }
         if (mode == GAME) {
@@ -268,6 +285,7 @@ public class RoseClient implements ClientModInitializer {
         double lookX = midX - cameraX, lookZ = midZ - cameraZ;
         cameraYaw = (float) Math.toDegrees(Math.atan2(lookZ, lookX)) - 90f;
         cameraPitch = (float) -Math.toDegrees(Math.atan2(lookY - cameraY, Math.sqrt(lookX * lookX + lookZ * lookZ)));
+        showBody = !bodyInTheWay(client, midX, lookY, midZ);
         placeCamera = true;
     }
 
@@ -381,7 +399,7 @@ public class RoseClient implements ClientModInitializer {
         context.method_51448().method_22909();
     }
 
-    /** Listens for "X used Y" so the camera can go to whoever is moving, as Sword and Shield's cameras do. */
+    /** Reads the battle's messages, so the camera can cut to whoever is attacking, hit, fainting or coming out. */
     private void listenForMoves() {
         ClientBattle battle = CobblemonClient.INSTANCE.getBattle();
         if (battle == null || battle == listeningTo) {
@@ -396,14 +414,66 @@ public class RoseClient implements ClientModInitializer {
             });
             String words = text.toString();
             class_310 client = class_310.method_1551();
-            if (words.contains(" used ") && client.field_1724 != null) {
-                moveShots.add(words.startsWith(client.field_1724.method_5477().getString() + "'s"));
+            if (client.field_1724 == null) {
+                return Unit.INSTANCE;
+            }
+            int mine = words.startsWith(client.field_1724.method_5477().getString() + "'s") ? 1 : 0;
+            if (words.contains(" used ")) {
+                shots.add(new int[] {ATTACK, mine});
+                shots.add(new int[] {REACT, 1 - mine});
+            } else if (words.contains(" fainted")) {
+                shots.add(new int[] {FAINT, mine});
+            } else if (words.startsWith("Go! ")) {
+                shots.add(new int[] {ENTER, 1});
+            } else if (words.contains(" sent out ")) {
+                shots.add(new int[] {ENTER, 0});
+            }
+            if (words.contains("super effective") || words.contains("critical hit")) {
+                // A big hit shakes the shot of whoever took it.
+                if (shot == REACT) {
+                    shakeStart = System.currentTimeMillis();
+                } else {
+                    shakePending = true;
+                }
             }
             return Unit.INSTANCE;
         });
     }
 
-    /** Sits behind your Pokemon while you choose and orbits around it, as in Scarlet and Violet. Moves get a shot of whoever is attacking. */
+    /** True when the player stands in the foreground of the shot, between the camera and what it is looking at. */
+    private boolean bodyInTheWay(class_310 client, double aimX, double aimY, double aimZ) {
+        double lineX = aimX - cameraX, lineY = aimY - cameraY, lineZ = aimZ - cameraZ;
+        double length = Math.max(0.1, Math.sqrt(lineX * lineX + lineY * lineY + lineZ * lineZ));
+        double toX = client.field_1724.method_23317() - cameraX, toY = client.field_1724.method_23318() + 0.9 - cameraY, toZ = client.field_1724.method_23321() - cameraZ;
+        double along = (toX * lineX + toY * lineY + toZ * lineZ) / length;
+        if (along < -1 || along > length + 0.5) {
+            // Behind the camera, or in the background where a trainer belongs.
+            return false;
+        }
+        double offX = toX - lineX / length * along, offY = toY - lineY / length * along, offZ = toZ - lineZ / length * along;
+        return Math.sqrt(offX * offX + offY * offY + offZ * offZ) < 1.4 + Math.max(0, along) * 0.6;
+    }
+
+    private void beginShot(int kind, boolean ofAlly, long now) {
+        bodyHidden = false;
+        shot = kind;
+        shotOfAlly = ofAlly;
+        shotStart = now;
+        // A long queue means the battle is running ahead of the camera, so hurry.
+        shotEnd = now + (long) (SHOT_MILLIS[kind] * (shots.size() > 3 ? 0.6 : 1));
+        if (kind == ATTACK) {
+            shakePending = false;
+        } else if (kind == REACT && shakePending) {
+            shakeStart = now + 250;
+            shakePending = false;
+        }
+    }
+
+    /**
+     * Films the battle the way the Pokemon games do, in cuts. While you choose, it sits behind your Pokemon, sometimes
+     * cutting to a wide shot. A move gets a shot of the attacker, then one over its shoulder at the target. Fainting and
+     * coming out get close-ups. The camera stays on one side of the two Pokemon, so left and right never swap.
+     */
     private void gameCamera(class_310 client, List<PokemonEntity> fighters) {
         UUID me = client.field_1724.method_5667();
         PokemonEntity ally = null;
@@ -432,12 +502,30 @@ public class RoseClient implements ClientModInitializer {
             return;
         }
         long now = System.currentTimeMillis();
-        if (!gliding) {
-            showAlly = false;
-            shotEnds = now + INTRO_MILLIS;
-        } else if (now >= shotEnds && !moveShots.isEmpty()) {
-            showAlly = moveShots.poll();
-            shotEnds = now + SHOT_MILLIS;
+        boolean cut = false;
+        boolean idle = shot == IDLE || shot == WIDE;
+        if (!gliding && kind == WILD) {
+            // Open on the wild Pokemon. Trainers announce theirs, which brings its own shot.
+            beginShot(ENTER, false, now);
+            shotEnd = now + INTRO_MILLIS;
+            cut = true;
+        } else if (!gliding) {
+            beginShot(IDLE, true, now);
+            cut = true;
+        } else if ((!idle && now >= shotEnd) || (idle && !shots.isEmpty())) {
+            int[] next = shots.poll();
+            if (next != null) {
+                beginShot(next[0], next[1] == 1, now);
+            } else {
+                beginShot(IDLE, true, now);
+            }
+            cut = true;
+        } else if (shot == IDLE && !lookedAround && now - shotStart > IDLE_BEFORE_WIDE) {
+            beginShot(WIDE, true, now);
+            cut = true;
+        } else if (shot == WIDE && (now >= shotEnd || lookedAround)) {
+            beginShot(IDLE, true, now);
+            cut = true;
         }
         double ax = ally.method_23317(), ay = ally.method_23318(), az = ally.method_23321();
         double fx = foe.method_23317(), fy = foe.method_23318(), fz = foe.method_23321();
@@ -445,83 +533,110 @@ public class RoseClient implements ClientModInitializer {
         double dirX = (fx - ax) / gap, dirZ = (fz - az) / gap;
         double rightX = -dirZ, rightZ = dirX;
         double allyHeight = ally.method_17682(), foeHeight = foe.method_17682();
-        double centerX, centerY, centerZ, offsetX, offsetY, offsetZ, lookX, lookY, lookZ;
-        if (now < shotEnds) {
-            // Facing whoever is moving, from the side they're attacking toward.
-            boolean toward = showAlly;
-            PokemonEntity star = toward ? ally : foe;
-            double height = star.method_17682();
-            double sign = toward ? 1 : -1;
-            centerX = star.method_23317();
-            centerY = star.method_23318();
-            centerZ = star.method_23321();
-            double near = 2.6 + height * 1.2;
-            offsetX = dirX * sign * near + rightX * sign * 1.8;
-            offsetY = 0.7 + height * 0.5;
-            offsetZ = dirZ * sign * near + rightZ * sign * 1.8;
-            lookX = 0;
-            lookY = height * 0.55;
-            lookZ = 0;
+        // The subject of the shot, the other Pokemon, and which way the subject faces it.
+        double sx = shotOfAlly ? ax : fx, sy = shotOfAlly ? ay : fy, sz = shotOfAlly ? az : fz;
+        double ox = shotOfAlly ? fx : ax, oy = shotOfAlly ? fy : ay, oz = shotOfAlly ? fz : az;
+        double height = shotOfAlly ? allyHeight : foeHeight, otherHeight = shotOfAlly ? foeHeight : allyHeight;
+        double facing = shotOfAlly ? 1 : -1;
+        double progress = shotEnd > shotStart ? Math.min(1, (now - shotStart) / (double) (shotEnd - shotStart)) : 0;
+        double goalX, goalY, goalZ, aimX, aimY, aimZ;
+        if (shot == ATTACK || shot == FAINT || shot == ENTER) {
+            // In front of the subject and off to the side. Attacks push in, entrances pull back, and faints rise slowly.
+            double near = shot == ATTACK ? (2.4 + height * 1.3) * (1 - 0.12 * progress) : shot == FAINT ? 2.0 + height * 1.1 : (2.0 + height * 1.2) * (1 + 0.25 * progress);
+            // Never so far forward that the camera ends up past the other Pokemon.
+            near = Math.min(near, gap * 0.62);
+            double side = shot == ATTACK ? 1.7 + height * 0.5 : shot == FAINT ? 1.2 + height * 0.4 : 1.0 + height * 0.4;
+            double up = shot == ATTACK ? 0.6 + height * 0.5 : shot == FAINT ? 0.35 + height * 0.25 + 0.5 * progress : 0.4 + height * 0.3;
+            goalX = sx + dirX * facing * near + rightX * side;
+            goalY = sy + up;
+            goalZ = sz + dirZ * facing * near + rightZ * side;
+            aimX = sx;
+            aimY = sy + height * (shot == ATTACK ? 0.55 : shot == FAINT ? 0.35 : 0.6);
+            aimZ = sz;
+            fovScale = shot == ATTACK ? 0.82 : shot == FAINT ? 0.75 : 0.85;
+        } else if (shot == REACT) {
+            // Over the attacker's shoulder at the Pokemon being hit.
+            double back = (1.6 + otherHeight * 1.2) * (1 - 0.1 * progress);
+            goalX = ox + dirX * facing * back + rightX * (0.9 + otherHeight * 0.45);
+            goalY = oy + otherHeight * 0.95 + 0.5;
+            goalZ = oz + dirZ * facing * back + rightZ * (0.9 + otherHeight * 0.45);
+            aimX = sx;
+            aimY = sy + height * 0.5;
+            aimZ = sz;
+            fovScale = 0.8;
+        } else if (shot == WIDE) {
+            // Both Pokemon from the side, panning slowly along the line between them.
+            double pan = -1.5 + 3 * progress;
+            goalX = (ax + fx) / 2 + rightX * (gap * 0.8 + 5.5) + dirX * pan;
+            goalY = (ay + fy) / 2 + 1.6;
+            goalZ = (az + fz) / 2 + rightZ * (gap * 0.8 + 5.5) + dirZ * pan;
+            aimX = (ax + fx) / 2;
+            aimY = (ay + fy) / 2 + 0.6;
+            aimZ = (az + fz) / 2;
+            fovScale = 0.85;
         } else {
-            // The classic view: behind and beside your Pokemon, looking across at the opponent.
-            centerX = ax;
-            centerY = ay;
-            centerZ = az;
-            double back = 3.2 + allyHeight * 1.4;
-            double side = 1.3 + allyHeight * 0.4;
-            offsetX = -dirX * back + rightX * side;
-            offsetY = 1.6 + allyHeight * 0.8;
-            offsetZ = -dirZ * back + rightZ * side;
-            lookX = dirX * gap * 0.55;
-            lookY = ((fy - ay) + foeHeight * 0.5 + allyHeight * 0.4) / 2;
-            lookZ = dirZ * gap * 0.55;
+            // The classic view: behind and beside your Pokemon, looking across at the opponent, swaying a little.
+            double back = 2.6 + allyHeight * 1.4;
+            double side = 1.4 + allyHeight * 0.45 + 0.25 * Math.sin((now - shotStart) / 2600.0);
+            double offsetX = -dirX * back + rightX * side, offsetZ = -dirZ * back + rightZ * side;
+            double lookX = dirX * gap * 0.7, lookZ = dirZ * gap * 0.7;
             // Right mouse orbits around your own Pokemon.
             double turn = Math.toRadians(class_3532.method_15393(client.field_1724.method_36454() - startYaw));
             double cos = Math.cos(turn), sin = Math.sin(turn);
-            double spunX = offsetX * cos - offsetZ * sin, spunZ = offsetX * sin + offsetZ * cos;
-            offsetX = spunX;
-            offsetZ = spunZ;
-            spunX = lookX * cos - lookZ * sin;
-            spunZ = lookX * sin + lookZ * cos;
-            lookX = spunX;
-            lookZ = spunZ;
+            goalX = ax + offsetX * cos - offsetZ * sin;
+            goalY = ay + 1.1 + allyHeight * 0.9;
+            goalZ = az + offsetX * sin + offsetZ * cos;
+            aimX = ax + lookX * cos - lookZ * sin;
+            aimY = ay + ((fy - ay) + foeHeight * 0.5 + allyHeight * 0.4) / 2;
+            aimZ = az + lookX * sin + lookZ * cos;
+            fovScale = 0.9;
         }
+        // Pull in toward what the shot is looking at rather than end up inside a wall.
         double reach = 1.0;
-        for (double step = 0.1; step <= 1.0; step += 0.05) {
-            class_2338 at = class_2338.method_49638(new class_243(centerX + offsetX * step, centerY + 0.5 + (offsetY - 0.5) * step, centerZ + offsetZ * step));
+        for (double step = 0.15; step <= 1.0; step += 0.05) {
+            class_2338 at = class_2338.method_49638(new class_243(aimX + (goalX - aimX) * step, aimY + (goalY - aimY) * step, aimZ + (goalZ - aimZ) * step));
             if (!client.field_1687.method_8320(at).method_26220(client.field_1687, at).method_1110()) {
                 reach = Math.max(0.2, step - 0.1);
                 break;
             }
         }
-        double goalX = centerX + offsetX * reach, goalY = centerY + 0.5 + (offsetY - 0.5) * reach, goalZ = centerZ + offsetZ * reach;
-        double aimX = centerX + lookX, aimY = centerY + lookY, aimZ = centerZ + lookZ;
-        if (!gliding) {
+        goalX = aimX + (goalX - aimX) * reach;
+        goalY = aimY + (goalY - aimY) * reach;
+        goalZ = aimZ + (goalZ - aimZ) * reach;
+        if (!gliding || cut) {
             glideX = goalX;
             glideY = goalY;
             glideZ = goalZ;
             lookAtX = aimX;
             lookAtY = aimY;
             lookAtZ = aimZ;
-            lastFrame = now;
             gliding = true;
+        } else {
+            // Within a shot the camera only eases, which smooths out the Pokemon's own movement.
+            double blend = 1 - Math.exp(-Math.min(now - lastFrame, 100) * (shot == IDLE ? 0.0035 : 0.012));
+            glideX += (goalX - glideX) * blend;
+            glideY += (goalY - glideY) * blend;
+            glideZ += (goalZ - glideZ) * blend;
+            lookAtX += (aimX - lookAtX) * blend;
+            lookAtY += (aimY - lookAtY) * blend;
+            lookAtZ += (aimZ - lookAtZ) * blend;
         }
-        double blend = 1 - Math.exp(-Math.min(now - lastFrame, 100) * 0.0035);
         lastFrame = now;
-        glideX += (goalX - glideX) * blend;
-        glideY += (goalY - glideY) * blend;
-        glideZ += (goalZ - glideZ) * blend;
-        lookAtX += (aimX - lookAtX) * blend;
-        lookAtY += (aimY - lookAtY) * blend;
-        lookAtZ += (aimZ - lookAtZ) * blend;
         cameraX = glideX;
         cameraY = glideY;
         cameraZ = glideZ;
         double toX = lookAtX - glideX, toZ = lookAtZ - glideZ;
         cameraYaw = (float) Math.toDegrees(Math.atan2(toZ, toX)) - 90f;
         cameraPitch = (float) -Math.toDegrees(Math.atan2(lookAtY - glideY, Math.sqrt(toX * toX + toZ * toZ)));
-        // Up close, your own back would fill the shot.
-        showBody = client.field_1724.method_5649(glideX, glideY, glideZ) > 16;
+        long shaking = now - shakeStart;
+        if (shaking >= 0 && shaking < SHAKE_MILLIS) {
+            double strength = 1.4 * (1 - shaking / (double) SHAKE_MILLIS);
+            cameraYaw += (float) (strength * Math.sin(shaking * 0.09));
+            cameraPitch += (float) (strength * Math.cos(shaking * 0.11));
+        }
+        // Your own body never blocks the shot: it only shows when it is off to the side or in the background.
+        bodyHidden |= client.field_1724.method_5649(glideX, glideY, glideZ) < 16 || bodyInTheWay(client, lookAtX, lookAtY, lookAtZ);
+        showBody = !bodyHidden;
         placeCamera = true;
     }
 
