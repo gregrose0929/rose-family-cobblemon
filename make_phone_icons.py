@@ -299,7 +299,7 @@ NAMES = {"travel": "Travel: fly to any city or gym", "gift": "Daily Gift", "hunt
          "rct_trainer_card": "Trainer Card", "pokedex": "Pok\u00e9dex", "pokeinfo": "Pok\u00e9mon Info", "cobblenav_pokenav": "PokeNav: who lives nearby", "crafting": "Crafting Table", "social": "Messages"}
 # The phone's own icons get names too.
 NATIVE_LABELS = {"pc": "PC", "cloud": "Bag", "cobbledollars": "Shop", "pokedex": "Pokedex", "pokeinfo": "Info", "pokenav": "PokeNav", "crafting": "Craft", "social": "Message", "trainer": "Card", "trainer_card": "Card", "rct_trainer_card": "Card", "rct": "Card", "trainercard": "Card", "fishnav": "FishNav"}
-MOD = {"schemaVersion": 1, "id": "rose_family_icons", "version": "1.12.1", "name": "Rose Family Icons", "description": "Icons for the Rose Family Server's phone apps, plus wording for server-only mods.", "environment": "*", "entrypoints": {"main": ["rose.fixes.RoseFixes"], "client": ["rose.fixes.RoseClient"]}, "mixins": [{"config": "rose_fixes.mixins.json", "environment": "client"}], "depends": {"minecraft": "~1.21.1"}, "license": "MIT"}
+MOD = {"schemaVersion": 1, "id": "rose_family_icons", "version": "1.13.0", "name": "Rose Family Icons", "description": "Icons for the Rose Family Server's phone apps, plus wording for server-only mods.", "environment": "*", "entrypoints": {"main": ["rose.fixes.RoseFixes"], "client": ["rose.fixes.RoseClient"]}, "mixins": [{"config": "rose_fixes.mixins.json", "environment": "client"}, "rose_trainers.mixins.json"], "depends": {"minecraft": "~1.21.1"}, "license": "MIT"}
 with zipfile.ZipFile(sys.argv[1], "w", zipfile.ZIP_DEFLATED) as jar:
     jar.writestr("fabric.mod.json", json.dumps(MOD))
     classes = os.path.join(os.path.dirname(os.path.abspath(__file__)), "rose_fixes")
@@ -308,6 +308,8 @@ with zipfile.ZipFile(sys.argv[1], "w", zipfile.ZIP_DEFLATED) as jar:
             with open(os.path.join(folder, name), "rb") as handle:
                 jar.writestr(os.path.relpath(os.path.join(folder, name), classes).replace(os.sep, "/"), handle.read())
     jar.writestr("rose_fixes.mixins.json", json.dumps({"required": True, "minVersion": "0.8", "package": "rose.fixes.mixin", "compatibilityLevel": "JAVA_21", "client": ["CameraMixin"], "injectors": {"defaultRequire": 1}}))
+    # These change the trainer mod on the server and on each PC. Not required, so the game still starts if that mod changes.
+    jar.writestr("rose_trainers.mixins.json", json.dumps({"required": False, "minVersion": "0.8", "package": "rose.fixes.mixin", "compatibilityLevel": "JAVA_21", "mixins": ["TrainerMixin", "LevelMixin"], "injectors": {"defaultRequire": 1}}))
     for name, (label, background, draw) in ICONS.items():
         jar.writestr(f"assets/rose_family/textures/gui/buttons/{name}.png", icon(background, draw, False, label))
         jar.writestr(f"assets/rose_family/textures/gui/buttons/{name}_hover.png", icon(background, draw, True, label))
@@ -316,6 +318,13 @@ with zipfile.ZipFile(sys.argv[1], "w", zipfile.ZIP_DEFLATED) as jar:
     # You can already walk during battles, so R only hides the menu.
     jar.writestr("assets/cobblemon/lang/en_us.json", json.dumps({'cobblemon.battle.ui.hide_label': 'Press %1$s to hide this menu.'}))
     jar.writestr("assets/cobbledollars/lang/en_us.json", json.dumps({"gui.cobbledollars.bank": "Sell", "screen.cobbledollars.bank": "Sell Items"}))
+    # Battle music is the game's own, so nothing extra is downloaded: one track each for wild, trainer and gym battles.
+    jar.writestr("assets/rose_family/sounds.json", json.dumps({
+        f"battle.{kind}": {"sounds": [{"name": f"minecraft:records/{track}", "stream": True}]}
+        for kind, track in (("wild", "creator"), ("trainer", "pigstep"), ("gym", "otherside"))}))
+    # Gym leaders and other big opponents, who get the gym music and an opening camera sweep.
+    with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "big_trainers.txt"), encoding="utf-8") as handle:
+        jar.writestr("assets/rose_family/big_trainers.txt", handle.read())
     if len(sys.argv) > 2:
         with zipfile.ZipFile(glob.glob(os.path.join(sys.argv[2], "cobblemon_smartphone*.jar"))[0]) as phone:
             for path in phone.namelist():

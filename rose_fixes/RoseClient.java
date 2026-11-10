@@ -5,7 +5,15 @@ import com.cobblemon.mod.common.entity.pokemon.PokemonEntity;
 import com.cobblemon.mod.common.item.PokeBallItem;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import com.cobblemon.mod.common.api.battles.model.actor.ActorType;
 import com.cobblemon.mod.common.client.battle.ClientBattle;
+import com.cobblemon.mod.common.client.battle.ClientBattleActor;
+import com.cobblemon.mod.common.client.battle.ClientBattleSide;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.Locale;
+import java.util.Map;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
@@ -14,11 +22,18 @@ import kotlin.Unit;
 import java.util.List;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.message.v1.ClientReceiveMessageEvents;
+import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents;
 import net.fabricmc.fabric.api.client.screen.v1.ScreenEvents;
 import net.fabricmc.fabric.api.client.screen.v1.ScreenMouseEvents;
 import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.class_1101;
+import net.minecraft.class_1113;
 import net.minecraft.class_1297;
+import net.minecraft.class_2960;
+import net.minecraft.class_332;
+import net.minecraft.class_3414;
+import net.minecraft.class_3419;
 import net.minecraft.class_2338;
 import net.minecraft.class_243;
 import net.minecraft.class_2561;
@@ -27,12 +42,17 @@ import net.minecraft.class_3532;
 import xaero.common.XaeroMinimapSession;
 import xaero.common.minimap.MinimapProcessor;
 
-/** Battles get a clear screen and a chosen camera. The battle menu frees the cursor, so holding right mouse looks around. */
+/**
+ * Battles get a clear screen, a chosen camera and music. Trainers are announced with a banner, and gym leaders and other
+ * big names get an opening sweep around the field. The battle menu frees the cursor, so holding right mouse looks around.
+ */
 public class RoseClient implements ClientModInitializer {
     private static final int RIGHT_BUTTON = 1;
     private static final String CAMERA_MESSAGE = "rose-battle-camera:";
     private static final int SIDE = 0, BEHIND = 1, OVERHEAD = 2, FIRST_PERSON = 3, FREE = 4, GAME = 5;
-    private static final long SHOT_MILLIS = 2200, INTRO_MILLIS = 2600;
+    private static final long SHOT_MILLIS = 2200, INTRO_MILLIS = 2600, SWEEP_MILLIS = 4200;
+    private static final int WILD = 0, TRAINER = 1, BIG = 2;
+    private static final String[] MUSIC = {"battle.wild", "battle.trainer", "battle.gym"};
 
     /** Read by the camera each frame. */
     public static boolean placeCamera;
@@ -60,6 +80,12 @@ public class RoseClient implements ClientModInitializer {
     private double offsetAngle;
     private double separation;
     private float startYaw;
+    /** Names of gym leaders and other big opponents, in lower case, with their title and name for the banner. */
+    private final Map<String, String[]> bigTrainers = new HashMap<>();
+    private int kind;
+    private String bannerTitle = "", bannerName = "";
+    private long battleStart, sweepStart;
+    private boolean sweepDone;
 
     private Path settingsFile() {
         return FabricLoader.getInstance().getConfigDir().resolve("rose_battle_camera.txt");
@@ -108,6 +134,7 @@ public class RoseClient implements ClientModInitializer {
             lookedAround = false;
             gliding = false;
             moveShots.clear();
+            beginBattle(client);
         }
         inBattle = battling;
         if (battling) {
@@ -172,6 +199,28 @@ public class RoseClient implements ClientModInitializer {
             midY += (y - midY) * 0.05;
             midZ += (z - midZ) * 0.05;
         }
+        if (kind == BIG && framed && !sweepDone && mode != FREE && mode != FIRST_PERSON) {
+            long now = System.currentTimeMillis();
+            if (sweepStart == 0) {
+                sweepStart = now;
+            }
+            if (now - sweepStart < SWEEP_MILLIS) {
+                sweep(client, (now - sweepStart) / (double) SWEEP_MILLIS);
+                return;
+            }
+            sweepDone = true;
+            // Game Style carries on from where the sweep ended instead of cutting.
+            glideX = cameraX;
+            glideY = cameraY;
+            glideZ = cameraZ;
+            lookAtX = midX;
+            lookAtY = midY + 0.8;
+            lookAtZ = midZ;
+            lastFrame = now;
+            shotEnds = now;
+            showAlly = false;
+            gliding = true;
+        }
         if (mode == GAME) {
             gameCamera(client, fighters);
             return;
@@ -189,9 +238,19 @@ public class RoseClient implements ClientModInitializer {
             }
             return;
         }
-        double distance = mode == OVERHEAD ? 2.5 : mode == BEHIND ? separation * 0.6 + 7 : separation * 0.7 + 6;
-        double height = mode == OVERHEAD ? 7 + separation * 0.3 : mode == BEHIND ? 3.5 : 2.5;
-        double angle = offsetAngle + Math.toRadians(class_3532.method_15393(client.field_1724.method_36454() - startYaw));
+        placeAround(client, offsetAngle + Math.toRadians(class_3532.method_15393(client.field_1724.method_36454() - startYaw)), modeDistance(), modeHeight());
+    }
+
+    private double modeDistance() {
+        return mode == OVERHEAD ? 2.5 : mode == BEHIND ? separation * 0.6 + 7 : separation * 0.7 + 6;
+    }
+
+    private double modeHeight() {
+        return mode == OVERHEAD ? 7 + separation * 0.3 : mode == BEHIND ? 3.5 : 2.5;
+    }
+
+    /** Puts the camera on a circle around the middle of the fight, looking in. */
+    private void placeAround(class_310 client, double angle, double distance, double height) {
         double outX = Math.cos(angle) * distance, outZ = Math.sin(angle) * distance;
         double lookY = midY + 0.8;
         // Pull in rather than end up inside a wall.
@@ -210,6 +269,116 @@ public class RoseClient implements ClientModInitializer {
         cameraYaw = (float) Math.toDegrees(Math.atan2(lookZ, lookX)) - 90f;
         cameraPitch = (float) -Math.toDegrees(Math.atan2(lookY - cameraY, Math.sqrt(lookX * lookX + lookZ * lookZ)));
         placeCamera = true;
+    }
+
+    /** Works out who the battle is against, then starts its music. */
+    private void beginBattle(class_310 client) {
+        ClientBattle battle = CobblemonClient.INSTANCE.getBattle();
+        kind = TRAINER;
+        bannerTitle = "";
+        bannerName = "";
+        battleStart = System.currentTimeMillis();
+        sweepStart = 0;
+        sweepDone = false;
+        if (battle.isPvW()) {
+            kind = WILD;
+        } else {
+            UUID me = client.field_1724 == null ? null : client.field_1724.method_5667();
+            for (ClientBattleSide side : battle.getSides()) {
+                boolean mine = false;
+                for (ClientBattleActor actor : side.getActors()) {
+                    mine |= actor.getUuid().equals(me);
+                }
+                if (mine) {
+                    continue;
+                }
+                for (ClientBattleActor actor : side.getActors()) {
+                    String name = actor.getDisplayName().getString();
+                    String[] big = bigTrainers.get(name.toLowerCase(Locale.ROOT));
+                    if (big != null) {
+                        kind = BIG;
+                        bannerTitle = big[0];
+                        bannerName = big[1];
+                    } else if (kind != BIG) {
+                        bannerTitle = actor.getType() == ActorType.PLAYER ? "Family Battle" : "Trainer Battle";
+                        bannerName = name;
+                    }
+                }
+            }
+        }
+        // The game's own background music would play over the battle's.
+        client.method_1538().method_4859();
+        client.method_1483().method_4873(new Music(MUSIC[kind]));
+        System.out.println("[Rose] Battle against " + (kind == WILD ? "a wild Pokemon" : bannerTitle + " " + bannerName) + ", music " + MUSIC[kind]
+            + (client.method_1483().method_4869(class_2960.method_60655("rose_family", MUSIC[kind])) == null ? " (missing)" : " (found)"));
+    }
+
+    /** Battle music that loops until the battle is over, then fades away. */
+    private static final class Music extends class_1101 {
+        private static final float FULL = 0.55f;
+
+        Music(String name) {
+            super(class_3414.method_47908(class_2960.method_60655("rose_family", name)), class_3419.field_15253, class_1113.method_43221());
+            field_5446 = true;
+            field_5451 = 0;
+            field_5442 = 0.05f;
+            field_18936 = true;
+            field_5440 = class_1113.class_1114.field_5478;
+        }
+
+        @Override
+        public void method_16896() {
+            if (class_310.method_1551().field_1687 == null) {
+                method_24876();
+            } else if (CobblemonClient.INSTANCE.getBattle() == null) {
+                field_5442 -= 0.02f;
+                if (field_5442 <= 0) {
+                    method_24876();
+                }
+            } else if (field_5442 < FULL) {
+                field_5442 = Math.min(FULL, field_5442 + 0.05f);
+            }
+        }
+    }
+
+    /** A circling shot that opens a battle with a gym leader, coming down to where the chosen camera sits. */
+    private void sweep(class_310 client, double progress) {
+        double eased = progress * progress * (3 - 2 * progress);
+        double far = separation * 0.9 + 12;
+        placeAround(client, offsetAngle + (1 - eased) * Math.PI * 1.15, far + (modeDistance() - far) * eased, 7.5 + (modeHeight() - 7.5) * eased);
+    }
+
+    /** Names the opponent across the middle of the screen as a trainer battle begins. */
+    private void drawBanner(class_310 client, class_332 context) {
+        if (!inBattle || kind == WILD || bannerName.isEmpty() || client.field_1690.field_1842) {
+            return;
+        }
+        long age = System.currentTimeMillis() - battleStart;
+        long length = kind == BIG ? SWEEP_MILLIS : INTRO_MILLIS;
+        if (age > length) {
+            return;
+        }
+        double opening = Math.min(1, age / 300.0);
+        double shown = Math.min(opening, Math.min(1, (length - age) / 400.0));
+        int alpha = (int) (shown * 255);
+        int width = context.method_51421(), middle = (int) (context.method_51443() * 0.36);
+        int half = kind == BIG ? 24 : 16;
+        int reach = (int) (width / 2 * opening);
+        int top = middle - half, bottom = middle + half;
+        context.method_25294(width / 2 - reach, top, width / 2 + reach, bottom, (int) (shown * 150) << 24);
+        context.method_25294(width / 2 - reach, top, width / 2 + reach, top + 1, alpha << 24 | 0xFFAA00);
+        context.method_25294(width / 2 - reach, bottom - 1, width / 2 + reach, bottom, alpha << 24 | 0xFFAA00);
+        if (alpha < 16) {
+            // Text this faint would be drawn solid.
+            return;
+        }
+        context.method_25300(client.field_1772, bannerTitle.toUpperCase(Locale.ROOT), width / 2, top + (kind == BIG ? 5 : 4), alpha << 24 | 0xFFAA00);
+        float scale = kind == BIG ? 2.5f : 1.5f;
+        context.method_51448().method_22903();
+        context.method_51448().method_46416(width / 2f, top + (kind == BIG ? 18 : 15), 0);
+        context.method_51448().method_22905(scale, scale, 1);
+        context.method_25300(client.field_1772, bannerName, 0, 0, alpha << 24 | 0xFFFFFF);
+        context.method_51448().method_22909();
     }
 
     /** Listens for "X used Y" so the camera can go to whoever is moving, as Sword and Shield's cameras do. */
@@ -359,6 +528,17 @@ public class RoseClient implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
         loadMode();
+        try (InputStream list = RoseClient.class.getResourceAsStream("/assets/rose_family/big_trainers.txt")) {
+            for (String line : new String(list.readAllBytes(), StandardCharsets.UTF_8).split("\n")) {
+                String[] parts = line.split("\\|");
+                if (parts.length == 3) {
+                    bigTrainers.put(parts[0], new String[] {parts[1], parts[2]});
+                }
+            }
+        } catch (Exception noList) {
+            // Every trainer then gets the ordinary trainer music and banner.
+        }
+        HudRenderCallback.EVENT.register((context, tick) -> drawBanner(class_310.method_1551(), context));
         WorldRenderEvents.START.register(context -> clearScreenForBattle(class_310.method_1551()));
         ClientReceiveMessageEvents.ALLOW_GAME.register((message, overlay) -> {
             String text = message.getString();

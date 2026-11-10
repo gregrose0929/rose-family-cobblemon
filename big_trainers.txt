@@ -1,0 +1,74 @@
+aaron|Elite Four|Aaron
+agatha|Elite Four|Agatha
+bertha|Elite Four|Bertha
+boss giovanni|Boss|Giovanni
+boss thug|Boss|Thug
+boss zeph|Boss|Zeph
+brock|Gym Leader|Brock
+bruno|Elite Four|Bruno
+bugsy|Gym Leader|Bugsy
+byron|Gym Leader|Byron
+candice|Gym Leader|Candice
+champion cynthia|Champion|Cynthia
+champion jax|Champion|Jax
+champion terry|Champion|Terry
+chuck|Gym Leader|Chuck
+clair|Gym Leader|Clair
+cynthia|Champion|Cynthia
+elite four aaron|Elite Four|Aaron
+elite four agatha|Elite Four|Agatha
+elite four arabella|Elite Four|Arabella
+elite four bertha|Elite Four|Bertha
+elite four bruno|Elite Four|Bruno
+elite four elias|Elite Four|Elias
+elite four flint|Elite Four|Flint
+elite four lance|Champion|Lance
+elite four lorelei|Elite Four|Lorelei
+elite four lucian|Elite Four|Lucian
+elite four moleman|Elite Four|Moleman
+elite four penny|Elite Four|Penny
+erika|Gym Leader|Erika
+falkner|Gym Leader|Falkner
+fantina|Gym Leader|Fantina
+flint|Elite Four|Flint
+gardenia|Gym Leader|Gardenia
+giovanni|Gym Leader|Giovanni
+gym leader byron|Gym Leader|Byron
+gym leader candice|Gym Leader|Candice
+gym leader fantina|Gym Leader|Fantina
+gym leader gardenia|Gym Leader|Gardenia
+gym leader maylene|Gym Leader|Maylene
+gym leader roark|Gym Leader|Roark
+gym leader volkner|Gym Leader|Volkner
+gym leader wake|Gym Leader|Wake
+jasmine|Gym Leader|Jasmine
+lance|Champion|Lance
+leader alice|Gym Leader|Alice
+leader benjamin|Gym Leader|Benjamin
+leader big mo|Gym Leader|Big Mo
+leader blaine|Gym Leader|Blaine
+leader brock|Gym Leader|Brock
+leader clair|Gym Leader|Clair
+leader erika|Gym Leader|Erika
+leader galavan|Gym Leader|Galavan
+leader koga|Gym Leader|Koga
+leader lt. surge|Gym Leader|Lt. Surge
+leader mel|Gym Leader|Mel
+leader mirskle|Gym Leader|Mirskle
+leader misty|Gym Leader|Misty
+leader sabrina|Gym Leader|Sabrina
+leader tessy|Gym Leader|Tessy
+leader vega|Gym Leader|Vega
+lorelei|Elite Four|Lorelei
+lt. surge|Gym Leader|Lt. Surge
+lucian|Elite Four|Lucian
+maylene|Gym Leader|Maylene
+misty|Gym Leader|Misty
+morty|Gym Leader|Morty
+pryce|Gym Leader|Pryce
+rival terry|Champion|Terry
+roark|Gym Leader|Roark
+ruin agent vega|Gym Leader|Vega
+volkner|Gym Leader|Volkner
+wake|Gym Leader|Wake
+whitney|Gym Leader|Whitney
