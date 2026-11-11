@@ -96,3 +96,5 @@ No mods are stored in this repository. They belong to their authors, and each on
 **New in 1.22.0:** a clean battle screen. Hearts, hunger, experience, the top bars and pop-ups hide during battles.
 
 **New in 1.23.0:** win and catch moments with a fanfare and banner, and no more move symbol in the corner while walking around.
+
+**New in 1.24.0:** battle camera polish. Anyone standing in the way of a shot is hidden for that shot, and the camera holds steady while you switch Pokemon.

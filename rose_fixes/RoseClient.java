@@ -12,6 +12,8 @@ import com.cobblemon.mod.common.client.battle.ClientBattleSide;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.Locale;
 import java.util.Map;
 import java.util.ArrayDeque;
@@ -67,6 +69,8 @@ public class RoseClient implements ClientModInitializer {
     public static float cameraYaw, cameraPitch;
     /** True during a battle: hearts, hunger, experience, the top bars and pop-ups are not drawn. */
     public static boolean cleanScreen;
+    /** Ids of people and Pokemon standing in the way of the current shot. They aren't drawn until the next cut. */
+    public static final Set<Integer> hidden = new HashSet<>();
     /** Below 1 zooms in, for close-ups. */
     public static double fovScale = 1;
 
@@ -81,6 +85,7 @@ public class RoseClient implements ClientModInitializer {
     private boolean bodyHidden;
     /** Which side of the two Pokemon this shot films from: 1 normally, -1 when a bystander blocks that side. */
     private int shotSide = 1;
+    private double heldFov = 1;
     /** A win or a catch: its banner, and for a win in Game Style a shot of the winner that outlasts the battle. */
     private static final long MOMENT_MILLIS = 3200;
     private String momentTitle = "", momentName = "";
@@ -174,6 +179,7 @@ public class RoseClient implements ClientModInitializer {
         } else {
             placeCamera = false;
             winner = null;
+            hidden.clear();
         }
         if (!placeCamera) {
             fovScale = 1;
@@ -305,6 +311,7 @@ public class RoseClient implements ClientModInitializer {
         cameraYaw = (float) Math.toDegrees(Math.atan2(lookZ, lookX)) - 90f;
         cameraPitch = (float) -Math.toDegrees(Math.atan2(lookY - cameraY, Math.sqrt(lookX * lookX + lookZ * lookZ)));
         showBody = !bodyInTheWay(client, midX, lookY, midZ);
+        hideBlockers(client, midX, midZ);
         placeCamera = true;
     }
 
@@ -318,6 +325,7 @@ public class RoseClient implements ClientModInitializer {
         sweepStart = 0;
         sweepDone = false;
         hush = false;
+        hidden.clear();
         victoryUntil = 0;
         if (battle.isPvW()) {
             kind = WILD;
@@ -474,6 +482,7 @@ public class RoseClient implements ClientModInitializer {
         cameraPitch = (float) -Math.toDegrees(Math.atan2(aimY - cameraY, Math.sqrt(toX * toX + toZ * toZ)));
         fovScale = 0.8;
         showBody = !bodyInTheWay(client, aimX, aimY, aimZ);
+        hideBlockers(client, aimX, aimZ);
         placeCamera = true;
     }
 
@@ -517,10 +526,10 @@ public class RoseClient implements ClientModInitializer {
             }
             if (words.contains("super effective") || words.contains("critical hit")) {
                 // A big hit shakes the shot of whoever took it.
-                if (shot == REACT) {
-                    shakeStart = System.currentTimeMillis();
-                } else {
+                if (shot == ATTACK) {
                     shakePending = true;
+                } else {
+                    shakeStart = System.currentTimeMillis();
                 }
             }
             return Unit.INSTANCE;
@@ -542,38 +551,48 @@ public class RoseClient implements ClientModInitializer {
     }
 
     /** True when anyone but the player and the fighting Pokemon stands between the camera and what it would film. */
-    private boolean someoneInTheWay(class_310 client, double fromX, double fromY, double fromZ, double aimX, double aimY, double aimZ) {
-        double lineX = aimX - fromX, lineY = aimY - fromY, lineZ = aimZ - fromZ;
-        double length = Math.max(0.1, Math.sqrt(lineX * lineX + lineY * lineY + lineZ * lineZ));
+    private List<class_1297> blockers(class_310 client, double fromX, double fromZ, double aimX, double aimZ) {
+        // Measured along the ground, so a tall person's legs count when the camera is low.
+        List<class_1297> found = new ArrayList<>();
+        double lineX = aimX - fromX, lineZ = aimZ - fromZ;
+        double length = Math.max(0.1, Math.sqrt(lineX * lineX + lineZ * lineZ));
         for (class_1297 entity : client.field_1687.method_18112()) {
             if (!(entity instanceof class_1309) || entity == client.field_1724 || (entity instanceof PokemonEntity pokemon && pokemon.isBattling())) {
                 continue;
             }
-            double toX = entity.method_23317() - fromX, toY = entity.method_23318() + entity.method_17682() / 2 - fromY, toZ = entity.method_23321() - fromZ;
-            double along = (toX * lineX + toY * lineY + toZ * lineZ) / length;
-            if (along < -0.5 || along > length - 0.5) {
+            double toX = entity.method_23317() - fromX, toZ = entity.method_23321() - fromZ;
+            double along = (toX * lineX + toZ * lineZ) / length;
+            if (along < -1 || along > length - 0.3) {
                 continue;
             }
-            double offX = toX - lineX / length * along, offY = toY - lineY / length * along, offZ = toZ - lineZ / length * along;
-            if (Math.sqrt(offX * offX + offY * offY + offZ * offZ) < 0.7 + entity.method_17681() / 2 + Math.max(0, along) * 0.3) {
-                return true;
+            double offX = toX - lineX / length * along, offZ = toZ - lineZ / length * along;
+            if (Math.sqrt(offX * offX + offZ * offZ) < 0.6 + entity.method_17681() / 2 + Math.max(0, along) * 0.45) {
+                found.add(entity);
             }
         }
-        return false;
+        return found;
+    }
+
+    /** Whoever is in the way of the camera as it now stands isn't drawn until the next cut. */
+    private void hideBlockers(class_310 client, double aimX, double aimZ) {
+        for (class_1297 entity : blockers(client, cameraX, cameraZ, aimX, aimZ)) {
+            hidden.add(entity.method_5628());
+        }
     }
 
     private void beginShot(int kind, boolean ofAlly, long now) {
         bodyHidden = false;
         shotSide = 1;
+        hidden.clear();
         shot = kind;
         shotOfAlly = ofAlly;
         shotStart = now;
         // A long queue means the battle is running ahead of the camera, so hurry.
         shotEnd = now + (long) (SHOT_MILLIS[kind] * (shots.size() > 3 ? 0.6 : 1));
-        if (kind == ATTACK) {
-            shakePending = false;
-        } else if (kind == REACT && shakePending) {
+        if (kind == REACT && shakePending) {
             shakeStart = now + 250;
+        }
+        if (kind != ATTACK) {
             shakePending = false;
         }
     }
@@ -614,6 +633,12 @@ public class RoseClient implements ClientModInitializer {
             return;
         }
         if (ally == null || foe == null || !framed) {
+            // One side is between Pokemon, so hold the last shot rather than jump back to the player's eyes.
+            if (gliding && framed) {
+                fovScale = heldFov;
+                showBody = !bodyHidden;
+                placeCamera = true;
+            }
             return;
         }
         boolean cut = false;
@@ -705,11 +730,12 @@ public class RoseClient implements ClientModInitializer {
             aimZ = az + lookX * sin + lookZ * cos;
             fovScale = 0.9;
         }
-        if (cut && someoneInTheWay(client, goalX, goalY, goalZ, aimX, aimY, aimZ)) {
-            // A townsperson or the other trainer is standing in the shot, so try it from the opposite side.
+        if (cut) {
+            // If a townsperson or the other trainer is standing in the shot, the opposite side may be clearer.
+            int here = blockers(client, goalX, goalZ, aimX, aimZ).size();
             double across = (goalX - ax) * rightX + (goalZ - az) * rightZ;
             double otherX = goalX - 2 * across * rightX, otherZ = goalZ - 2 * across * rightZ;
-            if (!someoneInTheWay(client, otherX, goalY, otherZ, aimX, aimY, aimZ)) {
+            if (here > 0 && blockers(client, otherX, otherZ, aimX, aimZ).size() < here) {
                 goalX = otherX;
                 goalZ = otherZ;
                 shotSide = -1;
@@ -761,6 +787,8 @@ public class RoseClient implements ClientModInitializer {
         // Your own body never blocks the shot: it only shows when it is off to the side or in the background.
         bodyHidden |= client.field_1724.method_5649(glideX, glideY, glideZ) < 16 || bodyInTheWay(client, lookAtX, lookAtY, lookAtZ);
         showBody = !bodyHidden;
+        heldFov = fovScale;
+        hideBlockers(client, lookAtX, lookAtZ);
         placeCamera = true;
     }
 
